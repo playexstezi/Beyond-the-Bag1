@@ -53,7 +53,7 @@ public final class WatcherEntity extends Monster {
         }
 
         // The Watcher freezes whenever the player can see it.
-        if (hasLineOfSight(target)) {
+        if (target.hasLineOfSight(this)) {
             getNavigation().stop();
             getLookControl().setLookAt(target, 30.0F, 30.0F);
             return;
