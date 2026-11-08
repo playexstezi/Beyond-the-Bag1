@@ -20,6 +20,9 @@ public final class PocketData extends SavedData {
     private final Map<UUID, Home> homes = new HashMap<>();
     private final Map<UUID, Set<UUID>> guests = new HashMap<>();
     private final Map<UUID, Expedition> expeditions = new HashMap<>();
+    // Stable private plots inside the shared pocket-world dimension. Each plot is allocated once.
+    private final Map<UUID, PersonalRealm> personalRealms = new HashMap<>();
+    private int nextRealmSlot = 0;
 
     /** Persistent state of the current unstable-dimension run. */
     public record Expedition(long seed, int instability, long runId) {
