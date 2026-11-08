@@ -20,6 +20,8 @@ public final class PocketData extends SavedData {
     private final Map<UUID, Home> homes = new HashMap<>();
     private final Map<UUID, Set<UUID>> guests = new HashMap<>();
     private final Map<UUID, Expedition> expeditions = new HashMap<>();
+    private final Map<UUID, PersonalRealm> personalRealms = new HashMap<>();
+    private int nextRealmSlot = 0;
     // Stable private plots inside the shared pocket-world dimension. Each plot is allocated once.
 
     /** Persistent state of the current unstable-dimension run. */
@@ -31,6 +33,27 @@ public final class PocketData extends SavedData {
 
     public record Home(ResourceLocation dimension, double x, double y, double z,
                        float yaw, float pitch) {}
+
+    /** A permanent isolated plot in the shared personal-world dimension. */
+    public record PersonalRealm(int slot, int originX, int originZ) {}
+
+    public Optional<PersonalRealm> getPersonalRealm(UUID owner) {
+        return Optional.ofNullable(personalRealms.get(owner));
+    }
+
+    /** Allocates a non-overlapping plot once; its coordinates never change after saving. */
+    public PersonalRealm getOrCreatePersonalRealm(UUID owner) {
+        PersonalRealm existing = personalRealms.get(Objects.requireNonNull(owner));
+        if (existing != null) return existing;
+        int slot = nextRealmSlot++;
+        int side = (int) Math.ceil(Math.sqrt(slot + 1));
+        int xIndex = slot % side;
+        int zIndex = slot / side;
+        PersonalRealm created = new PersonalRealm(slot, xIndex * 2048, zIndex * 2048);
+        personalRealms.put(owner, created);
+        setDirty();
+        return created;
+    }
 
     public static PocketData get(ServerLevel level) {
         return level.getServer().overworld().getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
@@ -135,6 +158,18 @@ public final class PocketData extends SavedData {
             expeditionList.add(entry);
         });
         tag.put("expeditions", expeditionList);
+
+        ListTag realmList = new ListTag();
+        personalRealms.forEach((owner, realm) -> {
+            CompoundTag entry = new CompoundTag();
+            entry.putUUID("owner", owner);
+            entry.putInt("slot", realm.slot());
+            entry.putInt("originX", realm.originX());
+            entry.putInt("originZ", realm.originZ());
+            realmList.add(entry);
+        });
+        tag.put("personalRealms", realmList);
+        tag.putInt("nextRealmSlot", nextRealmSlot);
         return tag;
     }
 
@@ -175,6 +210,21 @@ public final class PocketData extends SavedData {
                 // Ignore malformed expedition state.
             }
         }
+        ListTag realmList = tag.getList("personalRealms", Tag.TAG_COMPOUND);
+        int maxSlot = -1;
+        for (int i = 0; i < realmList.size(); i++) {
+            CompoundTag entry = realmList.getCompound(i);
+            try {
+                UUID owner = entry.getUUID("owner");
+                PersonalRealm realm = new PersonalRealm(entry.getInt("slot"),
+                        entry.getInt("originX"), entry.getInt("originZ"));
+                data.personalRealms.put(owner, realm);
+                maxSlot = Math.max(maxSlot, realm.slot());
+            } catch (RuntimeException ignored) {
+                // Ignore malformed plot records.
+            }
+        }
+        data.nextRealmSlot = Math.max(tag.getInt("nextRealmSlot"), maxSlot + 1);
         return data;
     }
 }
