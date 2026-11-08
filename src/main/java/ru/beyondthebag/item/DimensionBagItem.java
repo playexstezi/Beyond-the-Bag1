@@ -62,8 +62,13 @@ public final class DimensionBagItem extends Item {
             return InteractionResultHolder.sidedSuccess(stack, false);
         }
 
-        if (serverLevel.dimension().equals(PERSONAL_WORLD)
-                || serverLevel.dimension().equals(UNSTABLE_WORLD)) {
+        if (serverLevel.dimension().equals(UNSTABLE_WORLD)) {
+            serverPlayer.displayClientMessage(Component.literal(
+                    "В нестабильности мешок не работает. Найди врата выхода в лабиринте."), false);
+            return InteractionResultHolder.sidedSuccess(stack, false);
+        }
+
+        if (serverLevel.dimension().equals(PERSONAL_WORLD)) {
             PocketData.Home home = data.getHome(serverPlayer.getUUID()).orElse(null);
             if (home == null) {
                 serverPlayer.displayClientMessage(Component.translatable(

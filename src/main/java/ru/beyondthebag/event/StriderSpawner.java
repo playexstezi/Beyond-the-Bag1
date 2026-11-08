@@ -3,7 +3,6 @@ package ru.beyondthebag.event;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -21,7 +20,7 @@ import ru.beyondthebag.entity.*;
 import ru.beyondthebag.item.DimensionBagItem;
 import ru.beyondthebag.registry.ModEntities;
 
-/** Controlled server-side spawning for the expedition creature roster. */
+/** Spawns the complete expedition creature roster inside maze corridors and rooms. */
 @Mod.EventBusSubscriber(modid = BeyondTheBag.MOD_ID)
 public final class StriderSpawner {
     private static final Map<UUID, Long> NEXT_ATTEMPT = new ConcurrentHashMap<>();
@@ -36,21 +35,23 @@ public final class StriderSpawner {
         ServerLevel level = player.serverLevel();
         long now = level.getGameTime();
         if (now < NEXT_ATTEMPT.getOrDefault(player.getUUID(), 0L)) return;
-        NEXT_ATTEMPT.put(player.getUUID(), now + 240L);
+        NEXT_ATTEMPT.put(player.getUUID(), now + 180L);
 
         PocketData data = PocketData.get(player.server.overworld());
         PocketData.Expedition expedition = data.getExpedition(player.getUUID()).orElse(null);
-        if (expedition == null || expedition.instability() < 2) return;
+        if (expedition == null) return;
 
         AABB area = new AABB(player.blockPosition()).inflate(40.0D);
-        if (!level.getEntitiesOfClass(Mob.class, area,
+        long nearby = level.getEntitiesOfClass(Mob.class, area,
                 mob -> mob instanceof StriderEntity || mob instanceof WatcherEntity
-                        || mob instanceof DistortedEntity || mob instanceof GuardianEntity).isEmpty()) return;
+                        || mob instanceof DistortedEntity || mob instanceof GuardianEntity
+                        || mob instanceof MimicEntity).size();
+        if (nearby >= 4) return;
 
-        for (int attempt = 0; attempt < 16; attempt++) {
-            int dx = level.random.nextInt(25) - 12;
-            int dz = level.random.nextInt(25) - 12;
-            if (Math.abs(dx) + Math.abs(dz) < 8) continue;
+        for (int attempt = 0; attempt < 24; attempt++) {
+            int dx = level.random.nextInt(33) - 16;
+            int dz = level.random.nextInt(33) - 16;
+            if (Math.abs(dx) + Math.abs(dz) < 9) continue;
             int x = player.blockPosition().getX() + dx;
             int z = player.blockPosition().getZ() + dz;
             BlockPos spawn = new BlockPos(x, 73, z);
@@ -59,8 +60,8 @@ public final class StriderSpawner {
             if (!isMazeFloor(floor)
                     || !level.getBlockState(spawn).isAir()
                     || !level.getBlockState(spawn.above()).isAir()
-                    || !level.getBlockState(spawn.above(2)).isAir()) continue;
-            if (!floor.isFaceSturdy(level, floorPos, Direction.UP)) continue;
+                    || !level.getBlockState(spawn.above(2)).isAir()
+                    || !floor.isFaceSturdy(level, floorPos, Direction.UP)) continue;
 
             Mob creature = createCreature(level, expedition.instability());
             if (creature == null) return;
@@ -73,11 +74,11 @@ public final class StriderSpawner {
     }
 
     private static Mob createCreature(ServerLevel level, int instability) {
-        // Higher instability unlocks more dangerous creatures; low tiers remain readable.
         int roll = level.random.nextInt(100);
-        if (instability >= 4 && roll < 12) return ModEntities.GUARDIAN.get().create(level);
-        if (instability >= 3 && roll < 42) return ModEntities.DISTORTED.get().create(level);
-        if (roll < 68) return ModEntities.WATCHER.get().create(level);
+        if (instability >= 4 && roll < 8) return ModEntities.GUARDIAN.get().create(level);
+        if (instability >= 3 && roll < 25) return ModEntities.DISTORTED.get().create(level);
+        if (instability >= 1 && roll < 43) return ModEntities.MIMIC.get().create(level);
+        if (roll < 72) return ModEntities.WATCHER.get().create(level);
         return ModEntities.STRIDER.get().create(level);
     }
 
@@ -85,6 +86,7 @@ public final class StriderSpawner {
         return state.is(Blocks.DEEPSLATE_TILES)
                 || state.is(Blocks.POLISHED_DEEPSLATE)
                 || state.is(Blocks.CRACKED_DEEPSLATE_BRICKS)
-                || state.is(Blocks.BLACKSTONE);
+                || state.is(Blocks.BLACKSTONE)
+                || state.is(Blocks.POLISHED_BLACKSTONE_BRICKS);
     }
 }
