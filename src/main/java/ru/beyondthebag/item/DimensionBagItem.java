@@ -87,11 +87,6 @@ public final class DimensionBagItem extends Item {
             return InteractionResultHolder.sidedSuccess(stack, false);
         }
 
-        // The saved return anchor is refreshed before either destination is entered.
-        data.setHome(serverPlayer.getUUID(), new PocketData.Home(
-                serverLevel.dimension().location(), serverPlayer.getX(), serverPlayer.getY(),
-                serverPlayer.getZ(), serverPlayer.getYRot(), serverPlayer.getXRot()));
-
         boolean unstableRoute = ThreadLocalRandom.current().nextBoolean();
         ResourceKey<Level> targetKey = unstableRoute ? UNSTABLE_WORLD : PERSONAL_WORLD;
         ServerLevel destination = serverPlayer.server.getLevel(targetKey);
@@ -102,11 +97,18 @@ public final class DimensionBagItem extends Item {
             return InteractionResultHolder.sidedSuccess(stack, false);
         }
 
+        // Only replace the return anchor after the selected destination is confirmed loaded.
+        data.setHome(serverPlayer.getUUID(), new PocketData.Home(
+                serverLevel.dimension().location(), serverPlayer.getX(), serverPlayer.getY(),
+                serverPlayer.getZ(), serverPlayer.getYRot(), serverPlayer.getXRot()));
+
         if (unstableRoute) {
             long seed = ThreadLocalRandom.current().nextLong();
             long runId = ThreadLocalRandom.current().nextLong();
             data.startExpedition(serverPlayer.getUUID(), seed, runId);
-            BlockPos spawn = findSpawn(destination, 0, 0);
+            PocketData.PersonalRealm expeditionPlot =
+                    data.getOrCreatePersonalRealm(serverPlayer.getUUID());
+            BlockPos spawn = findSpawn(destination, expeditionPlot.centerX(), expeditionPlot.centerZ());
             serverPlayer.teleportTo(destination, spawn.getX() + 0.5, spawn.getY(),
                     spawn.getZ() + 0.5, serverPlayer.getYRot(), serverPlayer.getXRot());
             serverPlayer.displayClientMessage(Component.translatable(
@@ -128,7 +130,6 @@ public final class DimensionBagItem extends Item {
     }
 
     private static BlockPos findSpawn(ServerLevel level, int x, int z) {
-        BlockPos probe = new BlockPos(x, level.getSeaLevel(), z);
         int surfaceY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
         BlockPos candidate = new BlockPos(x, Math.max(level.getMinBuildHeight() + 1, surfaceY), z);
         level.getChunkAt(candidate);
