@@ -104,6 +104,11 @@ public final class DimensionBagItem extends Item {
                 serverPlayer.getZ(), serverPlayer.getYRot(), serverPlayer.getXRot()));
 
         if (unstableRoute) {
+            // Reconcile saved rendezvous entries with players who are physically present.
+            java.util.Set<java.util.UUID> activeMembers = destination.players().stream()
+                    .map(ServerPlayer::getUUID)
+                    .collect(java.util.stream.Collectors.toSet());
+            data.retainActiveExpeditionMembers(activeMembers);
             long seed = ThreadLocalRandom.current().nextLong();
             long runId = ThreadLocalRandom.current().nextLong();
             PocketData.Expedition expedition = data.joinOrStartExpedition(
