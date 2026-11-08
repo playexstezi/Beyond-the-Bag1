@@ -21,5 +21,6 @@
   "tooltip.beyondthebag.warning": "Не теряй мешок: он хранит путь назад.",
   "message.beyondthebag.personal_world_unavailable": "Личное измерение пока недоступно. Проверь, что мир создан и загружен.",
   "message.beyondthebag.personal_world_entered": "Мешок раскрывает путь в твоё личное измерение.",
-  "message.beyondthebag.realm_access_denied": "Эта территория принадлежит другому игроку. У тебя нет доступа."
+  "message.beyondthebag.realm_access_denied": "Эта территория принадлежит другому игроку. У тебя нет доступа.",
+  "message.beyondthebag.home_save_inside_realm": "Точка возвращения уже сохранена. Выйди из личного измерения, чтобы изменить её."
 }
