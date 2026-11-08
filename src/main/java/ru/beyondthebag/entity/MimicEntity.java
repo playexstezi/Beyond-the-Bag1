@@ -78,7 +78,44 @@ public final class MimicEntity extends PathfinderMob {
         goalSelector.addGoal(6, new RandomLookAroundGoal(this));
     }
 
-    @Override protected int getExperienceReward() { return 8 + random.nextInt(8); }\n\n    @Override protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean recentlyHit) {\n        super.dropCustomDeathLoot(level, source, recentlyHit);\n        if (random.nextFloat() < 0.85F) {\n            int count = 1 + random.nextInt(2);\n            spawnAtLocation(new ItemStack(ModItems.MIMIC_SHARD.get(), count));\n        }\n    }\n\n    public void respondToChat(ServerPlayer speaker, String message) {\n        if (level().isClientSide || !(level() instanceof ServerLevel server) || messageCooldown > 0\n                || !speaker.getUUID().equals(getCopiedPlayerId()) || distanceToSqr(speaker) > 1024.0D) return;\n        String text = message.toLowerCase(java.util.Locale.ROOT);\n        String reply;\n        if (text.contains("мим") || text.contains("кто ты") || text.contains("кто-нибудь")) {\n            reply = "Не понимаю, о чём ты. Я просто иду своей дорогой.";\n        } else if (text.contains("привет") || text.contains("здравств")) {\n            reply = "О, привет. Давно тебя не видел.";\n        } else if (text.contains("куда") || text.contains("ид")) {\n            reply = "Пока сам не решил. Здесь постоянно что-то меняется.";\n        } else if (text.contains("опас") || text.contains("страш") || text.contains("монстр")) {\n            reply = "Да, лучше держаться настороже. Я тоже кое-что заметил.";\n        } else if (text.contains("спасибо")) {\n            reply = "Да не за что.";\n        } else {\n            String[] replies = {"Понимаю тебя.", "Хм, может быть.", "Да, я тоже об этом думал.",\n                    "Здесь иногда лучше не торопиться.", "Интересно. Продолжай, я слушаю.",\n                    "Ага, заметил такое.", "Не уверен, но звучит правдоподобно."};\n            reply = replies[random.nextInt(replies.length)];\n        }\n        String copiedName = speaker.getGameProfile().getName();\n        Component line = Component.literal("<" + copiedName + "> " + reply);\n        for (ServerPlayer recipient : server.players()) recipient.sendSystemMessage(line);\n        messageCooldown = 1200;\n    }\n\n    @Override public void tick() {
+    @Override protected int getExperienceReward() { return 8 + random.nextInt(8); }
+
+    @Override protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean recentlyHit) {
+        super.dropCustomDeathLoot(level, source, recentlyHit);
+        if (random.nextFloat() < 0.85F) {
+            int count = 1 + random.nextInt(2);
+            spawnAtLocation(new ItemStack(ModItems.MIMIC_SHARD.get(), count));
+        }
+    }
+
+    public void respondToChat(ServerPlayer speaker, String message) {
+        if (level().isClientSide || !(level() instanceof ServerLevel server) || messageCooldown > 0
+                || !speaker.getUUID().equals(getCopiedPlayerId()) || distanceToSqr(speaker) > 1024.0D) return;
+        String text = message.toLowerCase(java.util.Locale.ROOT);
+        String reply;
+        if (text.contains("мим") || text.contains("кто ты") || text.contains("кто-нибудь")) {
+            reply = "Не понимаю, о чём ты. Я просто иду своей дорогой.";
+        } else if (text.contains("привет") || text.contains("здравств")) {
+            reply = "О, привет. Давно тебя не видел.";
+        } else if (text.contains("куда") || text.contains("ид")) {
+            reply = "Пока сам не решил. Здесь постоянно что-то меняется.";
+        } else if (text.contains("опас") || text.contains("страш") || text.contains("монстр")) {
+            reply = "Да, лучше держаться настороже. Я тоже кое-что заметил.";
+        } else if (text.contains("спасибо")) {
+            reply = "Да не за что.";
+        } else {
+            String[] replies = {"Понимаю тебя.", "Хм, может быть.", "Да, я тоже об этом думал.",
+                    "Здесь иногда лучше не торопиться.", "Интересно. Продолжай, я слушаю.",
+                    "Ага, заметил такое.", "Не уверен, но звучит правдоподобно."};
+            reply = replies[random.nextInt(replies.length)];
+        }
+        String copiedName = speaker.getGameProfile().getName();
+        Component line = Component.literal("<" + copiedName + "> " + reply);
+        for (ServerPlayer recipient : server.players()) recipient.sendSystemMessage(line);
+        messageCooldown = 1200;
+    }
+
+    @Override public void tick() {
         super.tick();
         if (level().isClientSide || !(level() instanceof ServerLevel server)) return;
         if (messageCooldown > 0) messageCooldown--;
