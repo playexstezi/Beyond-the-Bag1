@@ -136,8 +136,10 @@ public final class MimicEntity extends PathfinderMob {
             swing(InteractionHand.MAIN_HAND); gestureCooldown = 35;
         }
         if (messageCooldown == 0 && random.nextInt(1800) == 0) {
-            String[] lines = {"Давно здесь ходишь?", "Кажется, я видел тебя раньше.",
-                    "Тут сегодня как-то тихо.", "Ты тоже кого-то заметил?"};
+            String[] lines = {"Кажется, здесь что-то изменилось.", "Я немного осмотрюсь и догоню тебя.",
+                    "Странное сегодня место.", "Надо бы передохнуть.", "Я слышал что-то неподалёку.",
+                    "Похоже, нам сюда.", "Иногда тишина здесь подозрительнее шума.",
+                    "Я уже начинаю привыкать к этому месту."};
             String copiedName = target.getGameProfile().getName();
             Component disguisedMessage = Component.literal("<" + copiedName + "> " + lines[random.nextInt(lines.length)]);
             // Broadcast as an ordinary-looking chat line, without forging a signed player message.
