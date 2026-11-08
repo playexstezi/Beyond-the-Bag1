@@ -12,6 +12,8 @@ Current work is in `development/1.0.0`. The `main` branch is intentionally not u
 - Registered craftable item “Мешок измерений”.
 - Server-side persistent storage for player return points and guest permissions.
 - Bag can save a return anchor with Shift + right-click and return to it with right-click.
+- Outside the pocket dimensions, each normal bag use selects the personal realm or unstable expedition with an equal 50/50 chance.
+- Added an unstable dimension datapack entry and travel/return flow; the current dimension terrain is still an Overworld-style placeholder until maze block placement is implemented.
 - Server-side guest-list commands:
   - `/bagaccess invite <player>`
   - `/bagaccess revoke <player>`
