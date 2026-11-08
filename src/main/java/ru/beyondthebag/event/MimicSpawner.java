@@ -37,7 +37,7 @@ public final class MimicSpawner {
         AABB area = new AABB(player.blockPosition()).inflate(24.0D);
         long nearbyPlayers = level.getEntitiesOfClass(Player.class, area,
                 p -> p.isAlive() && !p.isSpectator()).size();
-        if (nearbyPlayers != 1) return;
+        if (nearbyPlayers == 0) return;
         if (!level.getEntitiesOfClass(MimicEntity.class, area).isEmpty()) return;
         if (level.random.nextInt(5) != 0) return;
 
@@ -51,7 +51,6 @@ public final class MimicSpawner {
 
             MimicEntity mimic = ModEntities.MIMIC.get().create(level);
             if (mimic == null) return;
-            mimic.copyPlayer(player);
             mimic.moveTo(surface.getX() + 0.5D, surface.getY(), surface.getZ() + 0.5D,
                     player.getYRot(), 0.0F);
             mimic.setPersistenceRequired();
