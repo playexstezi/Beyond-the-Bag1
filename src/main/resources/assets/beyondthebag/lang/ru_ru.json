@@ -12,5 +12,10 @@
   "command.beyondthebag.access_removed": "Игрок %s отозвал твой доступ к личному измерению.",
   "command.beyondthebag.not_invited": "У этого игрока нет доступа.",
   "command.beyondthebag.guest_list_empty": "Список гостей пуст.",
-  "command.beyondthebag.guest_list": "UUID игроков с доступом: %s"
+  "command.beyondthebag.guest_list": "UUID игроков с доступом: %s",
+  "command.beyondthebag.run_started": "Начат новый забег нестабильного измерения. ID: %s",
+  "command.beyondthebag.no_active_run": "У тебя нет активного забега.",
+  "command.beyondthebag.run_status": "Активный забег %s. Уровень нестабильности: %s/4.",
+  "command.beyondthebag.instability_set": "Уровень нестабильности установлен: %s/4.",
+  "command.beyondthebag.run_ended": "Состояние текущего забега очищено."
 }
