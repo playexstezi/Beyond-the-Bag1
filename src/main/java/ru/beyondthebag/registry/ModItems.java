@@ -11,7 +11,7 @@ import ru.beyondthebag.item.DimensionBagItem;
 public final class ModItems {
     private ModItems() {}
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, BeyondTheBag.MOD_ID);
-    public static final RegistryObject<Item> MIMIC_SHARD = ITEMS.register("mimic_shard",\n        () -> new Item(new Item.Properties()));\n    public static final RegistryObject<Item> DIMENSION_BAG = ITEMS.register("dimension_bag",
+    public static final RegistryObject<Item> DIMENSION_BAG = ITEMS.register("dimension_bag",
         () -> new DimensionBagItem(new Item.Properties().stacksTo(1).fireResistant()));
     public static void register(IEventBus bus) { ITEMS.register(bus); }
 }

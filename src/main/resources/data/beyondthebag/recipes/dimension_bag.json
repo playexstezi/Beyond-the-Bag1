@@ -2,22 +2,13 @@
   "type": "minecraft:crafting_shaped",
   "pattern": [
     "LSL",
-    "APA",
+    "LPL",
     " S "
   ],
   "key": {
-    "L": {
-      "item": "minecraft:leather"
-    },
-    "S": {
-      "item": "minecraft:string"
-    },
-    "P": {
-      "item": "minecraft:ender_pearl"
-    },
-    "A": {
-      "item": "minecraft:amethyst_shard"
-    }
+    "L": { "item": "minecraft:leather" },
+    "S": { "item": "minecraft:string" },
+    "P": { "item": "minecraft:ender_pearl" }
   },
   "result": {
     "item": "beyondthebag:dimension_bag",
