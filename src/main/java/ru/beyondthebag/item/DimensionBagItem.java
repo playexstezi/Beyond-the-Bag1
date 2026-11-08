@@ -105,14 +105,19 @@ public final class DimensionBagItem extends Item {
         if (unstableRoute) {
             long seed = ThreadLocalRandom.current().nextLong();
             long runId = ThreadLocalRandom.current().nextLong();
-            data.startExpedition(serverPlayer.getUUID(), seed, runId);
-            PocketData.PersonalRealm expeditionPlot =
-                    data.getOrCreatePersonalRealm(serverPlayer.getUUID());
-            BlockPos spawn = findSpawn(destination, expeditionPlot.centerX(), expeditionPlot.centerZ());
+            PocketData.Expedition expedition = data.joinOrStartExpedition(
+                    serverPlayer.getUUID(), seed, runId,
+                    serverPlayer.server.overworld().getGameTime(), 1200L);
+            // Members of the same rendezvous share one deterministic entry point.
+            int expeditionX = Math.floorMod((int) (expedition.seed() >>> 32), 8192) * 16;
+            int expeditionZ = Math.floorMod((int) expedition.seed(), 8192) * 16;
+            BlockPos spawn = findSpawn(destination, expeditionX, expeditionZ);
             serverPlayer.teleportTo(destination, spawn.getX() + 0.5, spawn.getY(),
                     spawn.getZ() + 0.5, serverPlayer.getYRot(), serverPlayer.getXRot());
             serverPlayer.displayClientMessage(Component.translatable(
                     "message.beyondthebag.unstable_world_entered"), false);
+            serverPlayer.displayClientMessage(Component.literal(
+                    "Экспедиция: " + Long.toUnsignedString(expedition.runId(), 16)), true);
             serverPlayer.playNotifySound(SoundEvents.RESPAWN_ANCHOR_CHARGE,
                     SoundSource.PLAYERS, 0.8F, 0.7F);
         } else {
