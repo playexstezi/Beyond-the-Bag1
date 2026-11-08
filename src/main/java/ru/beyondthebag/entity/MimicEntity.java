@@ -135,7 +135,12 @@ public final class MimicEntity extends PathfinderMob {
         if (messageCooldown == 0 && random.nextInt(1800) == 0) {
             String[] lines = {"Давно здесь ходишь?", "Кажется, я видел тебя раньше.",
                     "Тут сегодня как-то тихо.", "Ты тоже кого-то заметил?"};
-            target.sendSystemMessage(Component.literal("§8[Мимик] §7" + lines[random.nextInt(lines.length)]));
+            String copiedName = target.getGameProfile().getName();
+            Component disguisedMessage = Component.literal("<" + copiedName + "> " + lines[random.nextInt(lines.length)]);
+            // Broadcast as an ordinary-looking chat line, without forging a signed player message.
+            for (ServerPlayer recipient : server.players()) {
+                recipient.sendSystemMessage(disguisedMessage);
+            }
             messageCooldown = 1200;
         }
         if (stalkTicks > 2400 && distance < 9.0D && attackCooldown == 0 && nearbyPlayers.size() == 1) {
