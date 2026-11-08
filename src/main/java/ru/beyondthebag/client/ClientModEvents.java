@@ -19,6 +19,7 @@ public final class ClientModEvents {
         event.registerLayerDefinition(WatcherModel.LAYER, WatcherModel::createBodyLayer);
         event.registerLayerDefinition(DistortedModel.LAYER, DistortedModel::createBodyLayer);
         event.registerLayerDefinition(GuardianModel.LAYER, GuardianModel::createBodyLayer);
+        event.registerLayerDefinition(MimicModel.LAYER, MimicModel::createBodyLayer);
     }
 
     @SubscribeEvent
@@ -27,5 +28,6 @@ public final class ClientModEvents {
         event.registerEntityRenderer(ModEntities.WATCHER.get(), WatcherRenderer::new);
         event.registerEntityRenderer(ModEntities.DISTORTED.get(), DistortedRenderer::new);
         event.registerEntityRenderer(ModEntities.GUARDIAN.get(), GuardianRenderer::new);
+        event.registerEntityRenderer(ModEntities.MIMIC.get(), MimicRenderer::new);
     }
 }
