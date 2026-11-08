@@ -24,5 +24,6 @@
   "message.beyondthebag.realm_access_denied": "Эта территория принадлежит другому игроку. У тебя нет доступа.",
   "message.beyondthebag.home_save_inside_realm": "Точка возвращения уже сохранена. Выйди из личного измерения, чтобы изменить её.",
   "message.beyondthebag.unstable_world_unavailable": "Нестабильное измерение пока недоступно. Проверь загрузку измерения.",
-  "message.beyondthebag.unstable_world_entered": "Мешок исказился… Тебя затянуло в Нестабильность."
+  "message.beyondthebag.unstable_world_entered": "Мешок исказился… Тебя затянуло в Нестабильность.",
+  "entity.beyondthebag.strider_anomaly": "Странник"
 }
