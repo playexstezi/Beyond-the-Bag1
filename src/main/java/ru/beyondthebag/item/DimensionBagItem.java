@@ -41,6 +41,11 @@ public final class DimensionBagItem extends Item {
 
         PocketData data = PocketData.get(serverLevel);
         if (serverPlayer.isShiftKeyDown()) {
+            if (serverLevel.dimension().equals(PERSONAL_WORLD)) {
+                serverPlayer.displayClientMessage(Component.translatable(
+                        "message.beyondthebag.home_save_inside_realm"), true);
+                return InteractionResultHolder.sidedSuccess(stack, false);
+            }
             data.setHome(serverPlayer.getUUID(), new PocketData.Home(
                     serverLevel.dimension().location(), serverPlayer.getX(), serverPlayer.getY(),
                     serverPlayer.getZ(), serverPlayer.getYRot(), serverPlayer.getXRot()));
