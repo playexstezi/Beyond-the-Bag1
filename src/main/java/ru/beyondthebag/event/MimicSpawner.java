@@ -17,7 +17,7 @@ import ru.beyondthebag.BeyondTheBag;
 import ru.beyondthebag.entity.MimicEntity;
 import ru.beyondthebag.registry.ModEntities;
 
-/** Rare overworld encounters; the Mimic only approaches a lone player. */
+/** Rare Overworld encounters. A mimic spawns only near one isolated player. */
 @Mod.EventBusSubscriber(modid = BeyondTheBag.MOD_ID)
 public final class MimicSpawner {
     private static final Map<UUID, Long> NEXT_ATTEMPT = new ConcurrentHashMap<>();
@@ -47,10 +47,11 @@ public final class MimicSpawner {
             if (Math.abs(x - player.getX()) + Math.abs(z - player.getZ()) < 8) continue;
             BlockPos surface = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                     new BlockPos(x, player.blockPosition().getY(), z));
-            if (!level.getBlockState(surface).isAir()
-                    || !level.getBlockState(surface.above()).isAir()) continue;
+            if (!level.getBlockState(surface).isAir() || !level.getBlockState(surface.above()).isAir()) continue;
+
             MimicEntity mimic = ModEntities.MIMIC.get().create(level);
             if (mimic == null) return;
+            mimic.copyPlayer(player);
             mimic.moveTo(surface.getX() + 0.5D, surface.getY(), surface.getZ() + 0.5D,
                     player.getYRot(), 0.0F);
             mimic.setPersistenceRequired();
