@@ -25,5 +25,8 @@
   "message.beyondthebag.home_save_inside_realm": "Точка возвращения уже сохранена. Выйди из личного измерения, чтобы изменить её.",
   "message.beyondthebag.unstable_world_unavailable": "Нестабильное измерение пока недоступно. Проверь загрузку измерения.",
   "message.beyondthebag.unstable_world_entered": "Мешок исказился… Тебя затянуло в Нестабильность.",
-  "entity.beyondthebag.strider_anomaly": "Странник"
+  "entity.beyondthebag.strider_anomaly": "Странник",
+  "entity.beyondthebag.watcher": "Наблюдатель",
+  "entity.beyondthebag.distorted": "Искажённый",
+  "entity.beyondthebag.guardian": "Хранитель"
 }
