@@ -19,6 +19,7 @@ public final class PocketData extends SavedData {
     private final Map<UUID, Set<UUID>> guests = new HashMap<>();
     private final Map<UUID, Expedition> expeditions = new HashMap<>();
     private final Map<UUID, PersonalRealm> personalRealms = new HashMap<>();
+    private final Set<Long> generatedExpeditions = new HashSet<>();
     private int nextRealmSlot = 0;
     // Stable private plots inside the shared pocket-world dimension. Each plot is allocated once.
 
@@ -174,6 +175,10 @@ public final class PocketData extends SavedData {
         return Collections.unmodifiableSet(members);
     }
 
+    public boolean isMazeGenerated(long runId) { return generatedExpeditions.contains(runId); }
+
+    public void markMazeGenerated(long runId) { if (generatedExpeditions.add(runId)) setDirty(); }
+
     public void clearExpedition(UUID player) {
         if (expeditions.remove(player) != null) setDirty();
     }
@@ -230,6 +235,8 @@ public final class PocketData extends SavedData {
         });
         tag.put("personalRealms", realmList);
         tag.putInt("nextRealmSlot", nextRealmSlot);
+        long[] generated = generatedExpeditions.stream().mapToLong(Long::longValue).toArray();
+        tag.putLongArray("generatedExpeditions", generated);
         return tag;
     }
 
@@ -285,6 +292,7 @@ public final class PocketData extends SavedData {
             }
         }
         data.nextRealmSlot = Math.max(tag.getInt("nextRealmSlot"), maxSlot + 1);
+        for (long runId : tag.getLongArray("generatedExpeditions")) data.generatedExpeditions.add(runId);
         return data;
     }
 }
