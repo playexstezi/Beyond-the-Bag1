@@ -2,6 +2,7 @@ package ru.beyondthebag.event;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.event.level.BlockEvent;
@@ -24,8 +25,8 @@ public final class MimicActionEvents {
 
     @SubscribeEvent
     public static void onBlockBroken(BlockEvent.BreakEvent event) {
-        ServerPlayer player = event.getPlayer();
-        if (player == null || player.isCreative()) return;
+        Player breaker = event.getPlayer();
+        if (!(breaker instanceof ServerPlayer player) || player.isCreative()) return;
         BlockState state = event.getState();
         if (state.isAir() || state.hasBlockEntity()) return;
         mirrorAction(player, event.getPos(), state, false);
