@@ -149,13 +149,29 @@ public final class PocketData extends SavedData {
         return expedition;
     }
 
+    /**
+     * Instability belongs to the shared run, not to an individual participant.
+     * Updating it for one member updates every player carrying the same run id.
+     */
     public Optional<Expedition> setInstability(UUID player, int level) {
         Expedition current = expeditions.get(player);
         if (current == null) return Optional.empty();
         Expedition updated = new Expedition(current.seed(), level, current.runId(), current.startedAt());
-        expeditions.put(player, updated);
+        expeditions.replaceAll((member, expedition) ->
+                expedition.runId() == current.runId() ? updated : expedition);
         setDirty();
         return Optional.of(updated);
+    }
+
+    /** Returns a stable snapshot of all players assigned to the same run. */
+    public Set<UUID> getExpeditionMembers(UUID player) {
+        Expedition current = expeditions.get(player);
+        if (current == null) return Collections.emptySet();
+        Set<UUID> members = new HashSet<>();
+        expeditions.forEach((member, expedition) -> {
+            if (expedition.runId() == current.runId()) members.add(member);
+        });
+        return Collections.unmodifiableSet(members);
     }
 
     public void clearExpedition(UUID player) {
