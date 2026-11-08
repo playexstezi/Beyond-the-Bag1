@@ -15,6 +15,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -83,7 +84,8 @@ public final class MimicEntity extends PathfinderMob {
         if (blockActionCooldown > 0) blockActionCooldown--;
 
         UUID copiedId = getCopiedPlayerId();
-        ServerPlayer target = copiedId == null ? null : server.getPlayerByUUID(copiedId);
+        Player onlineTarget = copiedId == null ? null : server.getPlayerByUUID(copiedId);
+        ServerPlayer target = onlineTarget instanceof ServerPlayer serverPlayer ? serverPlayer : null;
         if (target == null || !target.isAlive() || target.isSpectator()) {
             setTarget(null); getNavigation().stop(); copiedActions.clear(); return;
         }

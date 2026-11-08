@@ -1,7 +1,6 @@
 package ru.beyondthebag.event;
 
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.level.Level;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -21,8 +20,7 @@ public final class DisableVanillaMobsInUnstable {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onEntityJoin(EntityJoinLevelEvent event) {
-        if (!(event.getLevel() instanceof Level level)
-                || !level.dimension().equals(DimensionBagItem.UNSTABLE_WORLD)
+        if (!event.getLevel().dimension().equals(DimensionBagItem.UNSTABLE_WORLD)
                 || !(event.getEntity() instanceof Mob mob)) return;
 
         boolean isOurs = mob instanceof StriderEntity
