@@ -12,6 +12,7 @@ import net.minecraftforge.registries.RegistryObject;
 import ru.beyondthebag.BeyondTheBag;
 import ru.beyondthebag.entity.DistortedEntity;
 import ru.beyondthebag.entity.GuardianEntity;
+import ru.beyondthebag.entity.MimicEntity;
 import ru.beyondthebag.entity.StriderEntity;
 import ru.beyondthebag.entity.WatcherEntity;
 
@@ -40,6 +41,11 @@ public final class ModEntities {
                     .sized(1.35F, 2.8F).clientTrackingRange(10).updateInterval(2)
                     .build("guardian"));
 
+    public static final RegistryObject<EntityType<MimicEntity>> MIMIC = ENTITY_TYPES.register(
+            "mimic", () -> EntityType.Builder.of(MimicEntity::new, MobCategory.MONSTER)
+                    .sized(0.7F, 2.0F).clientTrackingRange(10).updateInterval(2)
+                    .build("mimic"));
+
     private ModEntities() {}
 
     public static void register(IEventBus bus) {
@@ -52,5 +58,6 @@ public final class ModEntities {
         event.put(WATCHER.get(), WatcherEntity.createAttributes().build());
         event.put(DISTORTED.get(), DistortedEntity.createAttributes().build());
         event.put(GUARDIAN.get(), GuardianEntity.createAttributes().build());
+        event.put(MIMIC.get(), MimicEntity.createAttributes().build());
     }
 }
