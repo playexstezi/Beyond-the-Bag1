@@ -46,7 +46,7 @@ public final class AnomalyEvents {
         switch (anomaly) {
             case DISTANT_WHISPER -> {
                 player.displayClientMessage(Component.literal("§8За стеной кто-то тихо произносит ваше имя..."), true);
-                player.playNotifySound(SoundEvents.AMBIENT_CAVE, SoundSource.AMBIENT, 0.7F, 0.65F);
+                player.playNotifySound(SoundEvents.AMBIENT_CAVE.value(), SoundSource.AMBIENT, 0.7F, 0.65F);
             }
             case DISTANT_FOOTSTEPS -> {
                 player.displayClientMessage(Component.literal("§7Вы слышите шаги неподалёку."), true);
@@ -54,7 +54,7 @@ public final class AnomalyEvents {
             }
             case LIGHT_FLICKER -> {
                 player.displayClientMessage(Component.literal("§8Свет на мгновение меркнет."), true);
-                player.playNotifySound(SoundEvents.RESPAWN_ANCHOR_DEPLETE, SoundSource.AMBIENT, 0.5F, 1.4F);
+                player.playNotifySound(SoundEvents.RESPAWN_ANCHOR_DEPLETE.value(), SoundSource.AMBIENT, 0.5F, 1.4F);
             }
             case FALSE_DOOR -> {
                 player.displayClientMessage(Component.literal("§5Впереди будто появилась дверь. Моргнув, вы больше её не видите."), true);
