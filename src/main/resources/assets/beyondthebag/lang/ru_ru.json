@@ -16,7 +16,10 @@
   "message.beyondthebag.expedition_started": "Мешок раскрывается. Новая экспедиция готова…",
   "message.beyondthebag.expedition_ended_no_home": "Точка возвращения не сохранена. Сначала присядь и используй мешок, чтобы закрепить её.",
   "message.beyondthebag.expedition_returned": "Мешок свернулся, возвращая тебя к сохранённой точке.",
-  "tooltip.beyondthebag.primary": "ПКМ: начать экспедицию или вернуться из неё",
+  "tooltip.beyondthebag.primary": "ПКМ: войти в личное измерение или вернуться",
   "tooltip.beyondthebag.secondary": "Shift + ПКМ: сохранить точку возвращения",
-  "tooltip.beyondthebag.warning": "Не теряй мешок: он хранит путь назад."
+  "tooltip.beyondthebag.warning": "Не теряй мешок: он хранит путь назад.",
+  "message.beyondthebag.personal_world_unavailable": "Личное измерение пока недоступно. Проверь, что мир создан и загружен.",
+  "message.beyondthebag.personal_world_entered": "Мешок раскрывает путь в твоё личное измерение.",
+  "message.beyondthebag.realm_access_denied": "Эта территория принадлежит другому игроку. У тебя нет доступа."
 }
