@@ -48,7 +48,7 @@ public final class MazeWorldBuilder {
                 carvePassage(level, originX + room.x() * SPACING,
                         originZ + room.z() * SPACING,
                         originX + target.x() * SPACING,
-                        originZ + target.z() * SPACING, false);
+                        originZ + target.z() * SPACING);
             }
         }
 

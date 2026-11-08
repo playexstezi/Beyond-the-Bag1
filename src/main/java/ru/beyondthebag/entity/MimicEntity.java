@@ -148,7 +148,8 @@ public final class MimicEntity extends PathfinderMob {
         List<ServerPlayer> candidates = server.getEntitiesOfClass(ServerPlayer.class, getBoundingBox().inflate(48.0D), p -> p.isAlive() && !p.isSpectator());
         if (candidates.isEmpty()) return;
         UUID currentId = getCopiedPlayerId();
-        ServerPlayer current = currentId == null ? null : server.getPlayerByUUID(currentId);
+        Player onlineCurrent = currentId == null ? null : server.getPlayerByUUID(currentId);
+        ServerPlayer current = onlineCurrent instanceof ServerPlayer serverPlayer ? serverPlayer : null;
         ServerPlayer best = null;
         double bestScore = Double.NEGATIVE_INFINITY;
         for (ServerPlayer candidate : candidates) {
@@ -165,7 +166,9 @@ public final class MimicEntity extends PathfinderMob {
     }
     private void performCopiedBlockAction(ServerLevel server) {
         if (blockActionCooldown > 0 || copiedActions.isEmpty()) return;
-        CopiedBlockAction action = copiedActions.removeFirst();
+        CopiedBlockAction action = copiedActions.peekFirst();
+        if (tickCount < action.executeAt()) return;
+        copiedActions.removeFirst();
         blockActionCooldown = 8;
         if (distanceToSqr(Vec3.atCenterOf(action.pos())) > 64.0D || !server.hasChunkAt(action.pos())) return;
         BlockState current = server.getBlockState(action.pos());
