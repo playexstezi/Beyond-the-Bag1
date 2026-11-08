@@ -77,9 +77,11 @@ public final class BagAccessCommands {
                     && data.getRealmOwnerAt(guest.blockPosition().getX(), guest.blockPosition().getZ())
                             .filter(owner.getUUID()::equals).isPresent()) {
                 ServerLevel overworld = source.getServer().overworld();
-                guest.teleportTo(overworld, guest.getX(), overworld.getHeight(
-                        Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int) guest.getX(), (int) guest.getZ()),
-                        guest.getZ(), guest.getYRot(), guest.getXRot());
+                int x = (int) Math.floor(guest.getX());
+                int z = (int) Math.floor(guest.getZ());
+                int y = overworld.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+                guest.teleportTo(overworld, x + 0.5, y, z + 0.5,
+                        guest.getYRot(), guest.getXRot());
             }
         } else {
             source.sendFailure(Component.translatable("command.beyondthebag.not_invited"));
@@ -99,12 +101,16 @@ public final class BagAccessCommands {
             source.sendFailure(Component.translatable("message.beyondthebag.personal_world_unavailable"));
             return 0;
         }
-        PocketData.PersonalRealm realm = data.getOrCreatePersonalRealm(owner.getUUID());
-        if (!visitor.level().dimension().equals(PERSONAL_WORLD)) {
+
+        // Preserve the first outside return point, including when the guest starts
+        // in their own plot inside this shared dimension.
+        if (data.getHome(visitor.getUUID()).isEmpty()) {
             data.setHome(visitor.getUUID(), new PocketData.Home(
                     visitor.level().dimension().location(), visitor.getX(), visitor.getY(),
                     visitor.getZ(), visitor.getYRot(), visitor.getXRot()));
         }
+
+        PocketData.PersonalRealm realm = data.getOrCreatePersonalRealm(owner.getUUID());
         int x = realm.centerX();
         int z = realm.centerZ();
         int y = destination.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
