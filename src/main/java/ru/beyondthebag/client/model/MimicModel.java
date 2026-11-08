@@ -13,7 +13,6 @@ import net.minecraft.util.Mth;
 import ru.beyondthebag.BeyondTheBag;
 import ru.beyondthebag.entity.MimicEntity;
 
-/** A deliberately familiar, player-like silhouette with slightly elongated proportions. */
 public final class MimicModel extends HierarchicalModel<MimicEntity> {
     public static final ModelLayerLocation LAYER = new ModelLayerLocation(
             new ResourceLocation(BeyondTheBag.MOD_ID, "mimic"), "main");
