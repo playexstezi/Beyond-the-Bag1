@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.event.TickEvent;
@@ -27,7 +28,7 @@ public final class MimicSpawner {
         if (event.phase != TickEvent.Phase.END
                 || !(event.player instanceof ServerPlayer player)
                 || !(player.level() instanceof ServerLevel level)
-                || !level.dimension().equals(ServerLevel.OVERWORLD)) return;
+                || !level.dimension().equals(Level.OVERWORLD)) return;
 
         long now = level.getGameTime();
         if (now < NEXT_ATTEMPT.getOrDefault(player.getUUID(), 0L)) return;
