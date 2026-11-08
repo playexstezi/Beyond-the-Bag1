@@ -13,6 +13,8 @@
   "command.beyondthebag.not_invited": "У этого игрока нет доступа.",
   "command.beyondthebag.guest_list_empty": "Список гостей пуст.",
   "command.beyondthebag.guest_list": "UUID игроков с доступом: %s",
+  "command.beyondthebag.visit_denied": "У тебя нет приглашения в личное измерение этого игрока.",
+  "command.beyondthebag.visiting": "Ты вошёл в личное измерение игрока %s.",
   "message.beyondthebag.expedition_started": "Мешок раскрывается. Новая экспедиция готова…",
   "message.beyondthebag.expedition_ended_no_home": "Точка возвращения не сохранена. Сначала присядь и используй мешок, чтобы закрепить её.",
   "message.beyondthebag.expedition_returned": "Мешок свернулся, возвращая тебя к сохранённой точке.",
