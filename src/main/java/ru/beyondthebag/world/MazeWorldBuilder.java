@@ -127,9 +127,8 @@ public final class MazeWorldBuilder {
 
     private static void buildRoom(ServerLevel level, MazeLayout.Room room,
             int cx, int cz, PocketData.Expedition expedition) {
-        BlockState wall = room.type() == MazeLayout.RoomType.ANOMALY
-                ? Blocks.CRYING_OBSIDIAN.defaultBlockState()
-                : Blocks.DEEPSLATE_BRICKS.defaultBlockState();
+        // Every maze wall uses one consistent brick palette; room identity is shown by floors and effects.
+        BlockState wall = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
         BlockState floor = switch (room.type()) {
             case TREASURE, RARE -> Blocks.POLISHED_DEEPSLATE.defaultBlockState();
             case HAZARD -> Blocks.CRACKED_DEEPSLATE_BRICKS.defaultBlockState();
