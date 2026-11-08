@@ -3,7 +3,6 @@ package ru.beyondthebag.event;
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -32,11 +31,9 @@ public final class MimicBuildingEvents {
         for (MimicEntity mimic : nearbyMimics(level, player)) {
             BlockPos destination = translatedPos(player, mimic, source);
             if (!level.isLoaded(destination) || destination.equals(source)) continue;
-            if (!level.getBlockState(destination).canBeReplaced()
-                    || !level.getFluidState(destination).isEmpty()) continue;
-            BlockPos below = destination.below();
-            if (!level.getBlockState(below).isFaceSturdy(level, below, Direction.UP)) continue;
-            level.setBlock(destination, state, 3);
+            // Record the action; the mimic replays it later instead of
+            // building in lockstep with the real player.
+            mimic.imitateBlockAction(destination, state, true);
         }
     }
 
@@ -54,8 +51,8 @@ public final class MimicBuildingEvents {
             if (!level.isLoaded(destination) || destination.equals(source)) continue;
             BlockState mirrored = level.getBlockState(destination);
             if (unsafeToCopy(mirrored) || level.getBlockEntity(destination) != null) continue;
-            // Mirrored mining does not duplicate item drops.
-            level.destroyBlock(destination, false);
+            // Queue the mirrored break. Replay is delayed and produces no drops.
+            mimic.imitateBlockAction(destination, mirrored, false);
         }
     }
 

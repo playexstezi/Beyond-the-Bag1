@@ -176,17 +176,35 @@ public final class MazeWorldBuilder {
 
     private static void carvePassage(ServerLevel level, int x1, int z1,
             int x2, int z2, boolean secret) {
-        int x = x1, z = z1;
-        BlockState floor = Blocks.DEEPSLATE_TILES.defaultBlockState();
-        while (x != x2) {
-            carveCrossSection(level, x, z, floor, secret);
-            x += Integer.compare(x2, x);
+        int dx = Integer.compare(x2, x1);
+        int dz = Integer.compare(z2, z1);
+        // Only open the two facing room walls. The room interiors are never
+        // carved through, which used to create unintended holes across rooms.
+        for (int step = ROOM_RADIUS; step <= SPACING - ROOM_RADIUS; step++) {
+            int cx = x1 + dx * step;
+            int cz = z1 + dz * step;
+            for (int width = -1; width <= 1; width++) {
+                int px = cx + (dx == 0 ? width : 0);
+                int pz = cz + (dz == 0 ? width : 0);
+                BlockPos base = new BlockPos(px, FLOOR_Y, pz);
+                level.setBlock(base, Blocks.DEEPSLATE_TILES.defaultBlockState(), 3);
+                for (int dy = 1; dy <= WALL_HEIGHT; dy++) {
+                    level.setBlock(base.above(dy), Blocks.AIR.defaultBlockState(), 3);
+                }
+                level.setBlock(base.above(WALL_HEIGHT + 1),
+                        Blocks.DEEPSLATE_BRICKS.defaultBlockState(), 3);
+            }
+            // Solid side walls close the corridor; only its 3-block-wide
+            // center remains open.
+            for (int side : new int[]{-2, 2}) {
+                int sx = cx + (dx == 0 ? side : 0);
+                int sz = cz + (dz == 0 ? side : 0);
+                for (int dy = 1; dy <= WALL_HEIGHT; dy++) {
+                    level.setBlock(new BlockPos(sx, FLOOR_Y + dy, sz),
+                            Blocks.DEEPSLATE_BRICKS.defaultBlockState(), 3);
+                }
+            }
         }
-        while (z != z2) {
-            carveCrossSection(level, x, z, floor, secret);
-            z += Integer.compare(z2, z);
-        }
-        carveCrossSection(level, x, z, floor, secret);
     }
 
     private static void carveCrossSection(ServerLevel level, int x, int z,
