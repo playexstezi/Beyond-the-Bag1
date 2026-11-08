@@ -33,7 +33,26 @@ public final class PocketData extends SavedData {
                        float yaw, float pitch) {}
 
     /** A permanent isolated plot in the shared personal-world dimension. */
-    public record PersonalRealm(int slot, int originX, int originZ) {}
+    public record PersonalRealm(int slot, int originX, int originZ) {
+        public static final int SIZE = 2048;
+        public int centerX() { return originX + SIZE / 2; }
+        public int centerZ() { return originZ + SIZE / 2; }
+        public boolean contains(int x, int z) {
+            return x >= originX && x < originX + SIZE && z >= originZ && z < originZ + SIZE;
+        }
+    }
+
+    /** Returns the owner of a plot at the supplied block coordinates, if any. */
+    public Optional<UUID> getRealmOwnerAt(int x, int z) {
+        return personalRealms.entrySet().stream()
+                .filter(entry -> entry.getValue().contains(x, z))
+                .map(Map.Entry::getKey).findFirst();
+    }
+
+    /** Checks plot ownership and invitation permissions. */
+    public boolean canAccessRealm(UUID owner, UUID visitor) {
+        return hasAccess(owner, visitor);
+    }
 
     public Optional<PersonalRealm> getPersonalRealm(UUID owner) {
         return Optional.ofNullable(personalRealms.get(owner));
