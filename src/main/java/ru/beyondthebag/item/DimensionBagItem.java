@@ -21,6 +21,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 import ru.beyondthebag.data.PocketData;
+import ru.beyondthebag.world.MazeWorldBuilder;
 
 /** The bag randomly opens a permanent personal realm or an unstable expedition. */
 public final class DimensionBagItem extends Item {
@@ -111,7 +112,8 @@ public final class DimensionBagItem extends Item {
             // Members of the same rendezvous share one deterministic entry point.
             int expeditionX = Math.floorMod((int) (expedition.seed() >>> 32), 8192) * 16;
             int expeditionZ = Math.floorMod((int) expedition.seed(), 8192) * 16;
-            BlockPos spawn = findSpawn(destination, expeditionX, expeditionZ);
+            BlockPos spawn = MazeWorldBuilder.buildIfNeeded(
+                    destination, data, expedition, expeditionX, expeditionZ);
             serverPlayer.teleportTo(destination, spawn.getX() + 0.5, spawn.getY(),
                     spawn.getZ() + 0.5, serverPlayer.getYRot(), serverPlayer.getXRot());
             serverPlayer.displayClientMessage(Component.translatable(
