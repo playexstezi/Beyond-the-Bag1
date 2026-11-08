@@ -19,7 +19,7 @@ Current work is in `development/1.0.0`. The `main` branch is intentionally not u
 - Persistent expedition state model: per-player seed, run identifier and instability level clamped to 0–4.\n\n- Deterministic logical maze generator: connected room graph, room types, branches, dead ends and secret links; instability affects maze size and hazard/anomaly frequency.\n- Seeded loot-table generator with instability-gated rare drops and repeatable chest rolls.
 
 ### Not implemented yet
-- Separate persistent personal dimension and its terrain generation.
+- Runtime registration/verification and player teleport integration for the personal dimension; per-player plot terrain isolation and protection.
 - Bag GUI and invitation management through the GUI (not yet implemented).
 - Placement of the generated maze graph into actual dimension blocks, run reset and chest population from the loot table.
 - Instability events, traps, unique monsters and boss.
