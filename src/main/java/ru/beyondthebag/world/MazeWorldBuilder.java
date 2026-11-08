@@ -45,10 +45,16 @@ public final class MazeWorldBuilder {
                 MazeLayout.Room target = layout.rooms().get(targetId);
                 int gridDistance = Math.abs(room.x() - target.x()) + Math.abs(room.z() - target.z());
                 if (gridDistance != 1) continue;
-                carvePassage(level, originX + room.x() * SPACING,
-                        originZ + room.z() * SPACING,
-                        originX + target.x() * SPACING,
-                        originZ + target.z() * SPACING, false);
+                int dx = Integer.compare(target.x(), room.x());
+                int dz = Integer.compare(target.z(), room.z());
+                int roomX = originX + room.x() * SPACING;
+                int roomZ = originZ + room.z() * SPACING;
+                int targetX = originX + target.x() * SPACING;
+                int targetZ = originZ + target.z() * SPACING;
+                carvePassage(level,
+                        roomX + dx * ROOM_RADIUS, roomZ + dz * ROOM_RADIUS,
+                        targetX - dx * ROOM_RADIUS, targetZ - dz * ROOM_RADIUS,
+                        dx, dz);
             }
         }
 
@@ -174,34 +180,31 @@ public final class MazeWorldBuilder {
         }
     }
 
+    /**
+     * Builds a narrow, roofed corridor only in the gap between adjacent rooms.
+     * Room interiors and their walls are left intact; the doorway is one block wide.
+     */
     private static void carvePassage(ServerLevel level, int x1, int z1,
-            int x2, int z2, boolean secret) {
-        int x = x1, z = z1;
+            int x2, int z2, int directionX, int directionZ) {
+        int x = x1;
+        int z = z1;
         BlockState floor = Blocks.DEEPSLATE_TILES.defaultBlockState();
-        while (x != x2) {
-            carveCrossSection(level, x, z, floor, secret);
-            x += Integer.compare(x2, x);
+        while (true) {
+            BlockPos base = new BlockPos(x, FLOOR_Y, z);
+            level.setBlock(base, floor, 3);
+            for (int dy = 1; dy <= WALL_HEIGHT; dy++) {
+                level.setBlock(base.above(dy), Blocks.AIR.defaultBlockState(), 3);
+                BlockPos sideA = base.offset(-directionZ, dy, directionX);
+                BlockPos sideB = base.offset(directionZ, dy, -directionX);
+                level.setBlock(sideA, Blocks.DEEPSLATE_BRICKS.defaultBlockState(), 3);
+                level.setBlock(sideB, Blocks.DEEPSLATE_BRICKS.defaultBlockState(), 3);
+            }
+            level.setBlock(base.above(WALL_HEIGHT + 1),
+                    Blocks.DEEPSLATE_BRICKS.defaultBlockState(), 3);
+            if (x == x2 && z == z2) break;
+            x += directionX;
+            z += directionZ;
         }
-        while (z != z2) {
-            carveCrossSection(level, x, z, floor, secret);
-            z += Integer.compare(z2, z);
-        }
-        carveCrossSection(level, x, z, floor, secret);
     }
 
-    private static void carveCrossSection(ServerLevel level, int x, int z,
-            BlockState floor, boolean secret) {
-        int halfWidth = secret ? 0 : 1;
-        for (int dx = -halfWidth; dx <= halfWidth; dx++) {
-            for (int dz = -halfWidth; dz <= halfWidth; dz++) {
-                BlockPos base = new BlockPos(x + dx, FLOOR_Y, z + dz);
-                level.setBlock(base, floor, 3);
-                for (int dy = 1; dy <= WALL_HEIGHT; dy++) {
-                    level.setBlock(base.above(dy), Blocks.AIR.defaultBlockState(), 3);
-                }
-                level.setBlock(base.above(WALL_HEIGHT + 1),
-                        Blocks.DEEPSLATE_BRICKS.defaultBlockState(), 3);
-            }
-        }
-    }
 }

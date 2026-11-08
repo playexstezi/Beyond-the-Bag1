@@ -148,7 +148,8 @@ public final class MimicEntity extends PathfinderMob {
         List<ServerPlayer> candidates = server.getEntitiesOfClass(ServerPlayer.class, getBoundingBox().inflate(48.0D), p -> p.isAlive() && !p.isSpectator());
         if (candidates.isEmpty()) return;
         UUID currentId = getCopiedPlayerId();
-        ServerPlayer current = currentId == null ? null : server.getPlayerByUUID(currentId);
+        Player onlineCurrent = currentId == null ? null : server.getPlayerByUUID(currentId);
+        ServerPlayer current = onlineCurrent instanceof ServerPlayer serverPlayer ? serverPlayer : null;
         ServerPlayer best = null;
         double bestScore = Double.NEGATIVE_INFINITY;
         for (ServerPlayer candidate : candidates) {
