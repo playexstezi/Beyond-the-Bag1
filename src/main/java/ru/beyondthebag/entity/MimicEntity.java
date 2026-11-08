@@ -6,6 +6,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -17,10 +18,10 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 /** A cautious mimic that shadows isolated players and retreats from groups. */
-public final class MimicEntity extends Mob {
+public final class MimicEntity extends PathfinderMob {
     private int messageCooldown = 0;
 
-    public MimicEntity(EntityType<? extends Mob> type, Level level) {
+    public MimicEntity(EntityType<? extends PathfinderMob> type, Level level) {
         super(type, level);
         this.setCustomName(Component.literal("Мимик"));
         this.setCustomNameVisible(false);
