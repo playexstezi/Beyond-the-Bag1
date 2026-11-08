@@ -1,6 +1,7 @@
 package ru.beyondthebag.item;
 
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -21,10 +22,12 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 import ru.beyondthebag.data.PocketData;
 
-/** The bag provides entry to the owner's permanent personal realm and safe return. */
+/** The bag randomly opens a permanent personal realm or an unstable expedition. */
 public final class DimensionBagItem extends Item {
     public static final ResourceKey<Level> PERSONAL_WORLD = ResourceKey.create(
             Registries.DIMENSION, new ResourceLocation("beyondthebag", "personal_world"));
+    public static final ResourceKey<Level> UNSTABLE_WORLD = ResourceKey.create(
+            Registries.DIMENSION, new ResourceLocation("beyondthebag", "unstable_world"));
 
     public DimensionBagItem(Properties properties) {
         super(properties);
@@ -41,7 +44,8 @@ public final class DimensionBagItem extends Item {
 
         PocketData data = PocketData.get(serverLevel);
         if (serverPlayer.isShiftKeyDown()) {
-            if (serverLevel.dimension().equals(PERSONAL_WORLD)) {
+            if (serverLevel.dimension().equals(PERSONAL_WORLD)
+                    || serverLevel.dimension().equals(UNSTABLE_WORLD)) {
                 serverPlayer.displayClientMessage(Component.translatable(
                         "message.beyondthebag.home_save_inside_realm"), true);
                 return InteractionResultHolder.sidedSuccess(stack, false);
@@ -56,7 +60,8 @@ public final class DimensionBagItem extends Item {
             return InteractionResultHolder.sidedSuccess(stack, false);
         }
 
-        if (serverLevel.dimension().equals(PERSONAL_WORLD)) {
+        if (serverLevel.dimension().equals(PERSONAL_WORLD)
+                || serverLevel.dimension().equals(UNSTABLE_WORLD)) {
             PocketData.Home home = data.getHome(serverPlayer.getUUID()).orElse(null);
             if (home == null) {
                 serverPlayer.displayClientMessage(Component.translatable(
@@ -70,39 +75,64 @@ public final class DimensionBagItem extends Item {
                         "message.beyondthebag.home_unavailable"), false);
                 return InteractionResultHolder.sidedSuccess(stack, false);
             }
+            boolean fromUnstable = serverLevel.dimension().equals(UNSTABLE_WORLD);
             serverPlayer.teleportTo(destination, home.x(), home.y(), home.z(),
                     home.yaw(), home.pitch());
+            data.clearExpedition(serverPlayer.getUUID());
             serverPlayer.displayClientMessage(Component.translatable(
-                    "message.beyondthebag.expedition_returned"), false);
+                    fromUnstable ? "message.beyondthebag.expedition_returned"
+                            : "message.beyondthebag.expedition_returned"), false);
             serverPlayer.playNotifySound(SoundEvents.ENDERMAN_TELEPORT,
                     SoundSource.PLAYERS, 0.8F, 0.9F);
             return InteractionResultHolder.sidedSuccess(stack, false);
         }
 
-        ServerLevel personal = serverPlayer.server.getLevel(PERSONAL_WORLD);
-        if (personal == null) {
-            serverPlayer.displayClientMessage(Component.translatable(
-                    "message.beyondthebag.personal_world_unavailable"), false);
-            return InteractionResultHolder.sidedSuccess(stack, false);
-        }
-
+        // The saved return anchor is refreshed before either destination is entered.
         data.setHome(serverPlayer.getUUID(), new PocketData.Home(
                 serverLevel.dimension().location(), serverPlayer.getX(), serverPlayer.getY(),
                 serverPlayer.getZ(), serverPlayer.getYRot(), serverPlayer.getXRot()));
-        PocketData.PersonalRealm realm = data.getOrCreatePersonalRealm(serverPlayer.getUUID());
-        BlockPos probe = new BlockPos(realm.centerX(), personal.getSeaLevel(), realm.centerZ());
-        int surfaceY = personal.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                probe.getX(), probe.getZ());
-        BlockPos safe = new BlockPos(probe.getX(), Math.max(personal.getMinBuildHeight() + 1,
-                surfaceY), probe.getZ());
-        personal.getChunkAt(safe);
-        serverPlayer.teleportTo(personal, safe.getX() + 0.5, safe.getY(), safe.getZ() + 0.5,
-                serverPlayer.getYRot(), serverPlayer.getXRot());
-        serverPlayer.displayClientMessage(Component.translatable(
-                "message.beyondthebag.personal_world_entered"), false);
-        serverPlayer.playNotifySound(SoundEvents.ENDERMAN_TELEPORT,
-                SoundSource.PLAYERS, 0.8F, 1.1F);
+
+        boolean unstableRoute = ThreadLocalRandom.current().nextBoolean();
+        ResourceKey<Level> targetKey = unstableRoute ? UNSTABLE_WORLD : PERSONAL_WORLD;
+        ServerLevel destination = serverPlayer.server.getLevel(targetKey);
+        if (destination == null) {
+            serverPlayer.displayClientMessage(Component.translatable(
+                    unstableRoute ? "message.beyondthebag.unstable_world_unavailable"
+                            : "message.beyondthebag.personal_world_unavailable"), false);
+            return InteractionResultHolder.sidedSuccess(stack, false);
+        }
+
+        if (unstableRoute) {
+            long seed = ThreadLocalRandom.current().nextLong();
+            long runId = ThreadLocalRandom.current().nextLong();
+            data.startExpedition(serverPlayer.getUUID(), seed, runId);
+            BlockPos spawn = findSpawn(destination, 0, 0);
+            serverPlayer.teleportTo(destination, spawn.getX() + 0.5, spawn.getY(),
+                    spawn.getZ() + 0.5, serverPlayer.getYRot(), serverPlayer.getXRot());
+            serverPlayer.displayClientMessage(Component.translatable(
+                    "message.beyondthebag.unstable_world_entered"), false);
+            serverPlayer.playNotifySound(SoundEvents.RESPAWN_ANCHOR_CHARGE,
+                    SoundSource.PLAYERS, 0.8F, 0.7F);
+        } else {
+            data.clearExpedition(serverPlayer.getUUID());
+            PocketData.PersonalRealm realm = data.getOrCreatePersonalRealm(serverPlayer.getUUID());
+            BlockPos spawn = findSpawn(destination, realm.centerX(), realm.centerZ());
+            serverPlayer.teleportTo(destination, spawn.getX() + 0.5, spawn.getY(),
+                    spawn.getZ() + 0.5, serverPlayer.getYRot(), serverPlayer.getXRot());
+            serverPlayer.displayClientMessage(Component.translatable(
+                    "message.beyondthebag.personal_world_entered"), false);
+            serverPlayer.playNotifySound(SoundEvents.ENDERMAN_TELEPORT,
+                    SoundSource.PLAYERS, 0.8F, 1.1F);
+        }
         return InteractionResultHolder.sidedSuccess(stack, false);
+    }
+
+    private static BlockPos findSpawn(ServerLevel level, int x, int z) {
+        BlockPos probe = new BlockPos(x, level.getSeaLevel(), z);
+        int surfaceY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        BlockPos candidate = new BlockPos(x, Math.max(level.getMinBuildHeight() + 1, surfaceY), z);
+        level.getChunkAt(candidate);
+        return candidate;
     }
 
     @Override
