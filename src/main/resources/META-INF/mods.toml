@@ -1,0 +1,20 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="All Rights Reserved"
+[[mods]]
+modId="beyondthebag"
+version="1.0.0-dev"
+displayName="Beyond the Bag"
+description='''Мешок измерений: личное пространство и нестабильные экспедиции.'''
+[[dependencies.beyondthebag]]
+modId="forge"
+mandatory=true
+versionRange="[47.2.0,)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.beyondthebag]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1,1.21)"
+ordering="NONE"
+side="BOTH"
