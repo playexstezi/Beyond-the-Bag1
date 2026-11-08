@@ -32,14 +32,14 @@ public final class MimicSpawner {
 
         long now = level.getGameTime();
         if (now < NEXT_ATTEMPT.getOrDefault(player.getUUID(), 0L)) return;
-        NEXT_ATTEMPT.put(player.getUUID(), now + 6000L);
+        NEXT_ATTEMPT.put(player.getUUID(), now + 1200L);
 
         AABB area = new AABB(player.blockPosition()).inflate(24.0D);
         long nearbyPlayers = level.getEntitiesOfClass(Player.class, area,
                 p -> p.isAlive() && !p.isSpectator()).size();
-        if (nearbyPlayers != 1) return;
+        if (nearbyPlayers == 0) return;
         if (!level.getEntitiesOfClass(MimicEntity.class, area).isEmpty()) return;
-        if (level.random.nextInt(12) != 0) return;
+        if (level.random.nextInt(5) != 0) return;
 
         for (int attempt = 0; attempt < 12; attempt++) {
             int x = player.blockPosition().getX() + level.random.nextInt(25) - 12;

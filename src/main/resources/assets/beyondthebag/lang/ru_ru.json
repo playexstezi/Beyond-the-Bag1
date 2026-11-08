@@ -31,6 +31,5 @@
   "entity.beyondthebag.watcher": "Наблюдатель",
   "entity.beyondthebag.distorted": "Искажённый",
   "entity.beyondthebag.guardian": "Хранитель",
-  "entity.beyondthebag.mimic": "Мимик",
-  "item.beyondthebag.mimic_shard": "Осколок мимика"
+  "entity.beyondthebag.mimic": "Мимик"
 }
