@@ -55,7 +55,6 @@ public final class DimensionBagItem extends Item {
             return InteractionResultHolder.sidedSuccess(stack, false);
         }
 
-        data.clearExpedition(serverPlayer.getUUID());
         Optional<PocketData.Home> saved = data.getHome(serverPlayer.getUUID());
         if (saved.isEmpty()) {
             serverPlayer.displayClientMessage(Component.translatable("message.beyondthebag.expedition_ended_no_home"), false);
@@ -70,6 +69,7 @@ public final class DimensionBagItem extends Item {
             return InteractionResultHolder.sidedSuccess(stack, false);
         }
 
+        data.clearExpedition(serverPlayer.getUUID());
         serverPlayer.teleportTo(destination, home.x(), home.y(), home.z(), home.yaw(), home.pitch());
         serverPlayer.displayClientMessage(Component.translatable("message.beyondthebag.expedition_returned"), false);
         serverPlayer.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.8F, 0.9F);
