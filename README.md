@@ -20,7 +20,7 @@ Current work is in `development/1.0.0`. The `main` branch is intentionally not u
 
 ### Not implemented yet
 - Separate persistent personal dimension and its terrain generation.
-- Bag GUI and invitation management through the GUI.
+- Bag GUI and invitation management through the GUI (not yet implemented).
 - Placement of the generated maze graph into actual dimension blocks, run reset and chest population from the loot table.
 - Instability events, traps, unique monsters and boss.
 - Server-side dimension interaction protection and full multiplayer travel flow.
