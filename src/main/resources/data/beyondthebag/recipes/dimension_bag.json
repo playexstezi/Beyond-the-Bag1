@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["LEL", "ECE", "LEL"],
+  "key": { "L": { "item": "minecraft:leather" }, "E": { "item": "minecraft:ender_pearl" }, "C": { "item": "minecraft:chest" } },
+  "result": { "item": "beyondthebag:dimension_bag" }
+}
