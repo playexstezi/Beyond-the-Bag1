@@ -179,6 +179,11 @@ public final class PocketData extends SavedData {
 
     public void markMazeGenerated(long runId) { if (generatedExpeditions.add(runId)) setDirty(); }
 
+    /** Remove stale rendezvous records for players no longer inside the expedition dimension. */
+    public void retainActiveExpeditionMembers(Set<UUID> activePlayers) {
+        if (expeditions.keySet().removeIf(player -> !activePlayers.contains(player))) setDirty();
+    }
+
     public void clearExpedition(UUID player) {
         if (expeditions.remove(player) != null) setDirty();
     }
