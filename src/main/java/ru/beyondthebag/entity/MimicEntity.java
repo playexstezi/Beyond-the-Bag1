@@ -58,8 +58,7 @@ public final class MimicEntity extends Mob {
                 .orElse(null);
         if (nearest == null) return;
 
-        long groupSize = nearby.stream().filter(p -> p.distanceToSqr(nearest) <= 14.0D * 14.0D).count();
-        if (groupSize >= 2) {
+        if (nearby.size() >= 2) {
             Vec3 away = position().subtract(nearest.position()).normalize();
             if (away.lengthSqr() < 0.01D) away = new Vec3(1, 0, 0);
             getNavigation().moveTo(getX() + away.x * 20.0D, getY(), getZ() + away.z * 20.0D, 1.15D);
