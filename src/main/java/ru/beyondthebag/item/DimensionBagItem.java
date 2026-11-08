@@ -5,6 +5,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -142,10 +143,35 @@ public final class DimensionBagItem extends Item {
     }
 
     private static BlockPos findSpawn(ServerLevel level, int x, int z) {
+        // Generate/load terrain before reading its heightmap.
+        level.getChunkAt(new BlockPos(x, level.getSeaLevel(), z));
+
+        for (int radius = 0; radius <= 16; radius++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (radius > 0 && Math.abs(dx) != radius && Math.abs(dz) != radius) continue;
+                    int candidateX = x + dx;
+                    int candidateZ = z + dz;
+                    level.getChunkAt(new BlockPos(candidateX, level.getSeaLevel(), candidateZ));
+                    int surfaceY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, candidateX, candidateZ);
+                    BlockPos feet = new BlockPos(candidateX, surfaceY, candidateZ);
+                    BlockPos floor = feet.below();
+                    if (level.getBlockState(floor).isFaceSturdy(level, floor, Direction.UP)
+                            && level.getBlockState(feet).isAir()
+                            && level.getBlockState(feet.above()).isAir()
+                            && level.getFluidState(feet).isEmpty()
+                            && level.getFluidState(feet.above()).isEmpty()) return feet;
+                }
+            }
+        }
+
+        // Fallback: clear a landing space and make sure it has a solid floor.
         int surfaceY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        BlockPos candidate = new BlockPos(x, Math.max(level.getMinBuildHeight() + 1, surfaceY), z);
-        level.getChunkAt(candidate);
-        return candidate;
+        BlockPos feet = new BlockPos(x, surfaceY, z);
+        level.setBlock(feet.below(), net.minecraft.world.level.block.Blocks.STONE.defaultBlockState(), 3);
+        level.setBlock(feet, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
+        level.setBlock(feet.above(), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
+        return feet;
     }
 
     @Override
