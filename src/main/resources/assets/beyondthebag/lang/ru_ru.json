@@ -1,4 +1,8 @@
 {
   "item.beyondthebag.dimension_bag": "Мешок измерений",
-  "message.beyondthebag.menu_pending": "Мешок откликается. Интерфейс измерений готовится."
+  "message.beyondthebag.menu_pending": "Мешок пока не может открыть меню.",
+  "message.beyondthebag.home_saved": "Точка возвращения сохранена.",
+  "message.beyondthebag.home_first_saved": "Мешок запомнил это место. Используй его снова, чтобы вернуться.",
+  "message.beyondthebag.home_unavailable": "Измерение точки возвращения сейчас недоступно.",
+  "message.beyondthebag.returned": "Мешок возвращает тебя к сохранённой точке."
 }
