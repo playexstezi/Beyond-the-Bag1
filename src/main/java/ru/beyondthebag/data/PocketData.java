@@ -14,8 +14,6 @@ import net.minecraft.world.level.saveddata.SavedData;
  */
 public final class PocketData extends SavedData {
     private static final String DATA_NAME = "beyondthebag_pocket_data";
-    private static final SavedData.Factory<PocketData> FACTORY =
-            new SavedData.Factory<>(PocketData::new, PocketData::load);
 
     private final Map<UUID, Home> homes = new HashMap<>();
     private final Map<UUID, Set<UUID>> guests = new HashMap<>();
@@ -46,9 +44,10 @@ public final class PocketData extends SavedData {
         PersonalRealm existing = personalRealms.get(Objects.requireNonNull(owner));
         if (existing != null) return existing;
         int slot = nextRealmSlot++;
-        int side = (int) Math.ceil(Math.sqrt(slot + 1));
-        int xIndex = slot % side;
-        int zIndex = slot / side;
+        // A fixed-width grid is bijective: no two slot numbers map to the same plot.
+        int plotsPerRow = 64;
+        int xIndex = slot % plotsPerRow;
+        int zIndex = slot / plotsPerRow;
         PersonalRealm created = new PersonalRealm(slot, xIndex * 2048, zIndex * 2048);
         personalRealms.put(owner, created);
         setDirty();
@@ -56,7 +55,7 @@ public final class PocketData extends SavedData {
     }
 
     public static PocketData get(ServerLevel level) {
-        return level.getServer().overworld().getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
+        return level.getServer().overworld().getDataStorage().computeIfAbsent(PocketData::load, PocketData::new, DATA_NAME);
     }
 
     public Optional<Home> getHome(UUID owner) {
