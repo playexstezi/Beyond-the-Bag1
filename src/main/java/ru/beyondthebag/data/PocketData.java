@@ -19,6 +19,14 @@ public final class PocketData extends SavedData {
 
     private final Map<UUID, Home> homes = new HashMap<>();
     private final Map<UUID, Set<UUID>> guests = new HashMap<>();
+    private final Map<UUID, Expedition> expeditions = new HashMap<>();
+
+    /** Persistent state of the current unstable-dimension run. */
+    public record Expedition(long seed, int instability, long runId) {
+        public Expedition {
+            instability = Math.max(0, Math.min(4, instability));
+        }
+    }
 
     public record Home(ResourceLocation dimension, double x, double y, double z,
                        float yaw, float pitch) {}
@@ -62,6 +70,31 @@ public final class PocketData extends SavedData {
         return owner.equals(visitor) || guests.getOrDefault(owner, Collections.emptySet()).contains(visitor);
     }
 
+    public Optional<Expedition> getExpedition(UUID player) {
+        return Optional.ofNullable(expeditions.get(player));
+    }
+
+    /** Starts a fresh run; the previous run is replaced, never resumed. */
+    public Expedition startExpedition(UUID player, long seed, long runId) {
+        Expedition expedition = new Expedition(seed, 0, runId);
+        expeditions.put(Objects.requireNonNull(player), expedition);
+        setDirty();
+        return expedition;
+    }
+
+    public Optional<Expedition> setInstability(UUID player, int level) {
+        Expedition current = expeditions.get(player);
+        if (current == null) return Optional.empty();
+        Expedition updated = new Expedition(current.seed(), level, current.runId());
+        expeditions.put(player, updated);
+        setDirty();
+        return Optional.of(updated);
+    }
+
+    public void clearExpedition(UUID player) {
+        if (expeditions.remove(player) != null) setDirty();
+    }
+
     public Set<UUID> getGuests(UUID owner) {
         return Collections.unmodifiableSet(new HashSet<>(guests.getOrDefault(owner, Collections.emptySet())));
     }
@@ -90,6 +123,17 @@ public final class PocketData extends SavedData {
             accessList.add(entry);
         }));
         tag.put("access", accessList);
+
+        ListTag expeditionList = new ListTag();
+        expeditions.forEach((player, expedition) -> {
+            CompoundTag entry = new CompoundTag();
+            entry.putUUID("player", player);
+            entry.putLong("seed", expedition.seed());
+            entry.putInt("instability", expedition.instability());
+            entry.putLong("runId", expedition.runId());
+            expeditionList.add(entry);
+        });
+        tag.put("expeditions", expeditionList);
         return tag;
     }
 
@@ -118,6 +162,16 @@ public final class PocketData extends SavedData {
                 }
             } catch (RuntimeException ignored) {
                 // Ignore malformed permission records.
+            }
+        }
+        ListTag expeditionList = tag.getList("expeditions", Tag.TAG_COMPOUND);
+        for (int i = 0; i < expeditionList.size(); i++) {
+            CompoundTag entry = expeditionList.getCompound(i);
+            try {
+                data.expeditions.put(entry.getUUID("player"), new Expedition(
+                        entry.getLong("seed"), entry.getInt("instability"), entry.getLong("runId")));
+            } catch (RuntimeException ignored) {
+                // Ignore malformed expedition state.
             }
         }
         return data;
