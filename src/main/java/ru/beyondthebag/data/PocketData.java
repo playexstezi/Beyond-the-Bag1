@@ -23,7 +23,7 @@ public final class PocketData extends SavedData {
     // Stable private plots inside the shared pocket-world dimension. Each plot is allocated once.
 
     /** Persistent state of the current unstable-dimension run. */
-    public record Expedition(long seed, int instability, long runId) {
+    public record Expedition(long seed, int instability, long runId, long startedAt) {
         public Expedition {
             instability = Math.max(0, Math.min(4, instability));
         }
@@ -116,9 +116,34 @@ public final class PocketData extends SavedData {
         return Optional.ofNullable(expeditions.get(player));
     }
 
-    /** Starts a fresh run; the previous run is replaced, never resumed. */
+    /**
+     * Joins the most recently opened expedition while its rendezvous window is
+     * active. Players who arrive together share seed/runId and therefore the
+     * same generated maze. Otherwise a new solo expedition is created.
+     */
+    public Expedition joinOrStartExpedition(UUID player, long seed, long runId,
+                                            long now, long joinWindowTicks) {
+        Objects.requireNonNull(player);
+        Expedition existingForPlayer = expeditions.get(player);
+        if (existingForPlayer != null) return existingForPlayer;
+
+        Expedition rendezvous = expeditions.values().stream()
+                .filter(candidate -> now >= candidate.startedAt()
+                        && now - candidate.startedAt() <= joinWindowTicks)
+                .max(Comparator.comparingLong(Expedition::startedAt))
+                .orElse(null);
+        Expedition expedition = rendezvous != null
+                ? new Expedition(rendezvous.seed(), rendezvous.instability(),
+                        rendezvous.runId(), rendezvous.startedAt())
+                : new Expedition(seed, 0, runId, now);
+        expeditions.put(player, expedition);
+        setDirty();
+        return expedition;
+    }
+
+    /** Starts a fresh solo run; retained for callers that explicitly need one. */
     public Expedition startExpedition(UUID player, long seed, long runId) {
-        Expedition expedition = new Expedition(seed, 0, runId);
+        Expedition expedition = new Expedition(seed, 0, runId, 0L);
         expeditions.put(Objects.requireNonNull(player), expedition);
         setDirty();
         return expedition;
@@ -127,7 +152,7 @@ public final class PocketData extends SavedData {
     public Optional<Expedition> setInstability(UUID player, int level) {
         Expedition current = expeditions.get(player);
         if (current == null) return Optional.empty();
-        Expedition updated = new Expedition(current.seed(), level, current.runId());
+        Expedition updated = new Expedition(current.seed(), level, current.runId(), current.startedAt());
         expeditions.put(player, updated);
         setDirty();
         return Optional.of(updated);
@@ -173,6 +198,7 @@ public final class PocketData extends SavedData {
             entry.putLong("seed", expedition.seed());
             entry.putInt("instability", expedition.instability());
             entry.putLong("runId", expedition.runId());
+            entry.putLong("startedAt", expedition.startedAt());
             expeditionList.add(entry);
         });
         tag.put("expeditions", expeditionList);
@@ -223,7 +249,7 @@ public final class PocketData extends SavedData {
             CompoundTag entry = expeditionList.getCompound(i);
             try {
                 data.expeditions.put(entry.getUUID("player"), new Expedition(
-                        entry.getLong("seed"), entry.getInt("instability"), entry.getLong("runId")));
+                        entry.getLong("seed"), entry.getInt("instability"), entry.getLong("runId"), entry.getLong("startedAt")));
             } catch (RuntimeException ignored) {
                 // Ignore malformed expedition state.
             }
