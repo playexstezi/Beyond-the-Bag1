@@ -14,15 +14,13 @@ import net.minecraft.world.level.saveddata.SavedData;
  */
 public final class PocketData extends SavedData {
     private static final String DATA_NAME = "beyondthebag_pocket_data";
-    private static final Factory<PocketData> FACTORY =
-            new Factory<>(PocketData::new, PocketData::load);
+    private static final SavedData.Factory<PocketData> FACTORY =
+            new SavedData.Factory<>(PocketData::new, PocketData::load);
 
     private final Map<UUID, Home> homes = new HashMap<>();
     private final Map<UUID, Set<UUID>> guests = new HashMap<>();
     private final Map<UUID, Expedition> expeditions = new HashMap<>();
     // Stable private plots inside the shared pocket-world dimension. Each plot is allocated once.
-    private final Map<UUID, PersonalRealm> personalRealms = new HashMap<>();
-    private int nextRealmSlot = 0;
 
     /** Persistent state of the current unstable-dimension run. */
     public record Expedition(long seed, int instability, long runId) {
