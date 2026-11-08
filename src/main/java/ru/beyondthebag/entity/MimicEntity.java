@@ -34,6 +34,7 @@ public final class MimicEntity extends PathfinderMob {
             SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.STRING);
     private final Deque<CopiedBlockAction> copiedActions = new ArrayDeque<>();
     private int messageCooldown, stalkTicks, attackCooldown, retreatTicks, gestureCooldown, blockActionCooldown;
+    private int targetRecheckTicks, behaviourTicks;
     private record CopiedBlockAction(BlockPos pos, BlockState state, boolean place) {}
 
     public MimicEntity(EntityType<? extends PathfinderMob> type, Level level) { super(type, level); }
@@ -83,6 +84,7 @@ public final class MimicEntity extends PathfinderMob {
         if (gestureCooldown > 0) gestureCooldown--;
         if (blockActionCooldown > 0) blockActionCooldown--;
 
+        if (targetRecheckTicks-- <= 0) { targetRecheckTicks = 160 + random.nextInt(121); chooseObservedPlayer(server); }
         UUID copiedId = getCopiedPlayerId();
         Player onlineTarget = copiedId == null ? null : server.getPlayerByUUID(copiedId);
         ServerPlayer target = onlineTarget instanceof ServerPlayer serverPlayer ? serverPlayer : null;
@@ -114,17 +116,19 @@ public final class MimicEntity extends PathfinderMob {
 
         stalkTicks++;
         setCustomName(Component.literal(target.getGameProfile().getName()));
-        setShiftKeyDown(target.isCrouching());
-        setSprinting(target.isSprinting());
         double distance = distanceToSqr(target);
-        if (distance > 20.25D) {
-            Vec3 behind = Vec3.directionFromRotation(0.0F, target.getYRot()).scale(-2.8D);
-            getNavigation().moveTo(target.getX() + behind.x, target.getY(), target.getZ() + behind.z,
-                    target.isSprinting() ? 1.18D : 0.98D);
-        } else if (distance < 4.0D || random.nextInt(45) == 0) getNavigation().stop();
+        behaviourTicks++;
+        if (behaviourTicks % 40 == 0) {
+            if (distance > 100.0D) {
+                Vec3 offset = Vec3.directionFromRotation(0.0F, random.nextFloat() * 360.0F).scale(2.0D + random.nextDouble() * 3.0D);
+                getNavigation().moveTo(target.getX() + offset.x, target.getY(), target.getZ() + offset.z, 0.85D);
+            } else if (random.nextInt(4) == 0) getNavigation().stop();
+            else {
+                Vec3 wander = Vec3.directionFromRotation(0.0F, random.nextFloat() * 360.0F).scale(2.0D + random.nextDouble() * 5.0D);
+                getNavigation().moveTo(getX() + wander.x, getY(), getZ() + wander.z, 0.72D);
+            }
+        }
 
-        setYRot(target.getYRot()); setYHeadRot(target.getYHeadRot()); yBodyRot = target.yBodyRot;
-        if (target.getDeltaMovement().y > 0.18D && onGround() && random.nextInt(3) == 0) jumpFromGround();
         if (gestureCooldown == 0 && target.isUsingItem()) {
             swing(InteractionHand.MAIN_HAND); gestureCooldown = 35;
         }
@@ -140,6 +144,25 @@ public final class MimicEntity extends PathfinderMob {
         }
     }
 
+    private void chooseObservedPlayer(ServerLevel server) {
+        List<ServerPlayer> candidates = server.getEntitiesOfClass(ServerPlayer.class, getBoundingBox().inflate(48.0D), p -> p.isAlive() && !p.isSpectator());
+        if (candidates.isEmpty()) return;
+        UUID currentId = getCopiedPlayerId();
+        ServerPlayer current = currentId == null ? null : server.getPlayerByUUID(currentId);
+        ServerPlayer best = null;
+        double bestScore = Double.NEGATIVE_INFINITY;
+        for (ServerPlayer candidate : candidates) {
+            int nearby = server.getEntitiesOfClass(ServerPlayer.class, candidate.getBoundingBox().inflate(20.0D), p -> p.isAlive() && !p.isSpectator()).size();
+            double score = (nearby <= 1 ? 2.5D : nearby == 2 ? 0.8D : -1.5D) - Math.sqrt(distanceToSqr(candidate)) * 0.035D;
+            if (candidate.getDeltaMovement().horizontalDistanceSqr() > 0.01D) score += 0.35D;
+            if (candidate == current) score += 1.25D;
+            score += random.nextDouble() * 0.2D;
+            if (score > bestScore) { bestScore = score; best = candidate; }
+        }
+        if (best != null && (current == null || best == current || bestScore > 1.0D)) {
+            if (!best.getUUID().equals(getCopiedPlayerId())) { copyPlayer(best); stalkTicks = 0; copiedActions.clear(); }
+        }
+    }
     private void performCopiedBlockAction(ServerLevel server) {
         if (blockActionCooldown > 0 || copiedActions.isEmpty()) return;
         CopiedBlockAction action = copiedActions.removeFirst();

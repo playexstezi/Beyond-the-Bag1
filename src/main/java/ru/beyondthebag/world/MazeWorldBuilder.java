@@ -43,11 +43,12 @@ public final class MazeWorldBuilder {
             for (int targetId : room.connections()) {
                 if (targetId <= room.id()) continue;
                 MazeLayout.Room target = layout.rooms().get(targetId);
+                int gridDistance = Math.abs(room.x() - target.x()) + Math.abs(room.z() - target.z());
+                if (gridDistance != 1) continue;
                 carvePassage(level, originX + room.x() * SPACING,
                         originZ + room.z() * SPACING,
                         originX + target.x() * SPACING,
-                        originZ + target.z() * SPACING,
-                        room.secret() || target.secret());
+                        originZ + target.z() * SPACING, false);
             }
         }
 
