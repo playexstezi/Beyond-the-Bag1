@@ -1,7 +1,6 @@
 package ru.beyondthebag.entity;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -47,7 +46,7 @@ public final class WatcherEntity extends Monster {
         if (stalkingCooldown > 0) return;
         stalkingCooldown = 10;
 
-        ServerPlayer target = server.getNearestPlayer(this, 24.0D);
+        Player target = server.getNearestPlayer(this, 24.0D);
         if (target == null || !target.isAlive() || target.isSpectator()) {
             getNavigation().stop();
             return;
