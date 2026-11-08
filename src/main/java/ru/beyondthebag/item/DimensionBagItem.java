@@ -1,8 +1,10 @@
 package ru.beyondthebag.item;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -14,13 +16,11 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import ru.beyondthebag.data.PocketData;
 
-/**
- * Main gameplay controller. Sneak-use binds the return point; normal use
- * starts a fresh expedition or, when one is active, ends it and returns home.
- */
+/** The bag is the player's sole normal interface for expeditions and return travel. */
 public final class DimensionBagItem extends Item {
     public DimensionBagItem(Properties properties) {
         super(properties);
@@ -48,9 +48,8 @@ public final class DimensionBagItem extends Item {
 
         Optional<PocketData.Expedition> active = data.getExpedition(serverPlayer.getUUID());
         if (active.isEmpty()) {
-            long seed = ThreadLocalRandom.current().nextLong();
-            long runId = ThreadLocalRandom.current().nextLong();
-            data.startExpedition(serverPlayer.getUUID(), seed, runId);
+            data.startExpedition(serverPlayer.getUUID(), ThreadLocalRandom.current().nextLong(),
+                    ThreadLocalRandom.current().nextLong());
             serverPlayer.displayClientMessage(Component.translatable("message.beyondthebag.expedition_started"), false);
             serverPlayer.playNotifySound(SoundEvents.RESPAWN_ANCHOR_CHARGE, SoundSource.PLAYERS, 0.75F, 0.8F);
             return InteractionResultHolder.sidedSuccess(stack, false);
@@ -75,5 +74,13 @@ public final class DimensionBagItem extends Item {
         serverPlayer.displayClientMessage(Component.translatable("message.beyondthebag.expedition_returned"), false);
         serverPlayer.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.8F, 0.9F);
         return InteractionResultHolder.sidedSuccess(stack, false);
+    }
+
+    @Override
+    public void appendHoverText(ItemStack stack, Level level, List<Component> tooltip,
+                                TooltipFlag flag) {
+        tooltip.add(Component.translatable("tooltip.beyondthebag.primary").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("tooltip.beyondthebag.secondary").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("tooltip.beyondthebag.warning").withStyle(ChatFormatting.DARK_PURPLE));
     }
 }
