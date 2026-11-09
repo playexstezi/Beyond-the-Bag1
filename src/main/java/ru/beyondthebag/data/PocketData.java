@@ -19,6 +19,7 @@ public final class PocketData extends SavedData {
     private final Map<UUID, Set<UUID>> guests = new HashMap<>();
     private final Map<UUID, Expedition> expeditions = new HashMap<>();
     private final Map<UUID, PersonalRealm> personalRealms = new HashMap<>();
+    private final Map<UUID, RealmPosition> personalPositions = new HashMap<>();
     private final Set<Long> generatedExpeditions = new HashSet<>();
     private int nextRealmSlot = 0;
     // Stable private plots inside the shared pocket-world dimension. Each plot is allocated once.
@@ -32,6 +33,10 @@ public final class PocketData extends SavedData {
 
     public record Home(ResourceLocation dimension, double x, double y, double z,
                        float yaw, float pitch) {}
+
+    public record RealmPosition(double x, double y, double z, float yaw, float pitch) {}
+    public Optional<RealmPosition> getPersonalPosition(UUID owner) { return Optional.ofNullable(personalPositions.get(owner)); }
+    public void setPersonalPosition(UUID owner, RealmPosition position) { personalPositions.put(owner, position); setDirty(); }
 
     /** A permanent isolated plot in the shared personal-world dimension. */
     public record PersonalRealm(int slot, int originX, int originZ) {
@@ -240,6 +245,9 @@ public final class PocketData extends SavedData {
         });
         tag.put("personalRealms", realmList);
         tag.putInt("nextRealmSlot", nextRealmSlot);
+        ListTag positions = new ListTag();
+        personalPositions.forEach((owner, p) -> { CompoundTag e = new CompoundTag(); e.putUUID("owner", owner); e.putDouble("x", p.x()); e.putDouble("y", p.y()); e.putDouble("z", p.z()); e.putFloat("yaw", p.yaw()); e.putFloat("pitch", p.pitch()); positions.add(e); });
+        tag.put("personalPositions", positions);
         long[] generated = generatedExpeditions.stream().mapToLong(Long::longValue).toArray();
         tag.putLongArray("generatedExpeditions", generated);
         return tag;
@@ -297,6 +305,8 @@ public final class PocketData extends SavedData {
             }
         }
         data.nextRealmSlot = Math.max(tag.getInt("nextRealmSlot"), maxSlot + 1);
+        ListTag positions = tag.getList("personalPositions", Tag.TAG_COMPOUND);
+        for (int i = 0; i < positions.size(); i++) { CompoundTag e = positions.getCompound(i); try { data.personalPositions.put(e.getUUID("owner"), new RealmPosition(e.getDouble("x"), e.getDouble("y"), e.getDouble("z"), e.getFloat("yaw"), e.getFloat("pitch"))); } catch (RuntimeException ignored) {} }
         for (long runId : tag.getLongArray("generatedExpeditions")) data.generatedExpeditions.add(runId);
         return data;
     }

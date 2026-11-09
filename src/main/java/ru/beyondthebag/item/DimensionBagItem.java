@@ -97,8 +97,11 @@ public final class DimensionBagItem extends Item {
                     }
                 }
             }
-            serverPlayer.teleportTo(destination, home.x(), home.y(), home.z(),
-                    home.yaw(), home.pitch());
+            if (serverLevel.dimension().equals(PERSONAL_WORLD)) {
+                PocketData.RealmPosition last = data.getPersonalPosition(serverPlayer.getUUID()).orElse(null);
+                if (last != null) serverPlayer.teleportTo(destination, last.x(), last.y(), last.z(), last.yaw(), last.pitch());
+                else serverPlayer.teleportTo(destination, home.x(), home.y(), home.z(), home.yaw(), home.pitch());
+            } else serverPlayer.teleportTo(destination, home.x(), home.y(), home.z(), home.yaw(), home.pitch());
             data.clearExpedition(serverPlayer.getUUID());
             serverPlayer.getPersistentData().remove("beyondthebag_sanity");
             serverPlayer.getPersistentData().remove("beyondthebag_last_sanity_tick");
@@ -159,9 +162,12 @@ public final class DimensionBagItem extends Item {
         } else {
             data.clearExpedition(serverPlayer.getUUID());
             PocketData.PersonalRealm realm = data.getOrCreatePersonalRealm(serverPlayer.getUUID());
-            BlockPos spawn = findSpawn(destination, realm.centerX(), realm.centerZ());
-            serverPlayer.teleportTo(destination, spawn.getX() + 0.5, spawn.getY(),
-                    spawn.getZ() + 0.5, serverPlayer.getYRot(), serverPlayer.getXRot());
+            PocketData.RealmPosition last = data.getPersonalPosition(serverPlayer.getUUID()).orElse(null);
+            if (last != null) serverPlayer.teleportTo(destination, last.x(), last.y(), last.z(), last.yaw(), last.pitch());
+            else {
+                BlockPos spawn = findSpawn(destination, realm.centerX(), realm.centerZ());
+                serverPlayer.teleportTo(destination, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, serverPlayer.getYRot(), serverPlayer.getXRot());
+            }
             serverPlayer.displayClientMessage(Component.translatable(
                     "message.beyondthebag.personal_world_entered"), false);
             serverPlayer.playNotifySound(SoundEvents.ENDERMAN_TELEPORT,
