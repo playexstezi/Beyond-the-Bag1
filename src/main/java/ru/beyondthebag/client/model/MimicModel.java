@@ -30,9 +30,9 @@ public final class MimicModel extends HierarchicalModel<MimicEntity> {
                 CubeListBuilder.create().texOffs(16,16).addBox(-4,-6,-2,8,12,4),
                 PartPose.offset(0,5,0));
         body.addOrReplaceChild("head",CubeListBuilder.create().texOffs(0,0).addBox(-4,-8,-4,8,8,8),PartPose.offset(0,-7,0));
-        body.addOrReplaceChild("left_arm",CubeListBuilder.create().texOffs(40,16).addBox(-1,-2,-2,3,13,4),PartPose.offset(5,-5,0));
+        body.addOrReplaceChild("left_arm",CubeListBuilder.create().texOffs(32,48).addBox(-1,-2,-2,3,13,4),PartPose.offset(5,-5,0));
         body.addOrReplaceChild("right_arm",CubeListBuilder.create().texOffs(40,16).addBox(-2,-2,-2,3,13,4),PartPose.offset(-5,-5,0));
-        root.addOrReplaceChild("left_leg",CubeListBuilder.create().texOffs(0,16).addBox(-2,0,-2,4,12,4),PartPose.offset(2,12,0));
+        root.addOrReplaceChild("left_leg",CubeListBuilder.create().texOffs(0,48).addBox(-2,0,-2,4,12,4),PartPose.offset(2,12,0));
         root.addOrReplaceChild("right_leg",CubeListBuilder.create().texOffs(0,16).addBox(-2,0,-2,4,12,4),PartPose.offset(-2,12,0));
         return LayerDefinition.create(mesh,64,64);
     }
