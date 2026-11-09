@@ -12,6 +12,8 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import ru.beyondthebag.BeyondTheBag;
 import ru.beyondthebag.data.PocketData;
+import ru.beyondthebag.entity.GuardianEntity;
+import net.minecraft.world.phys.AABB;
 import ru.beyondthebag.item.DimensionBagItem;
 
 /** Handles the physical return gate placed in the final chamber of an expedition. */
@@ -30,6 +32,17 @@ public final class UnstableGateEvents {
                 || !isGateFrame(level, gate)) return;
 
         event.setCanceled(true);
+
+        // The final gate is sealed while the chamber guardian is alive.
+        boolean bossAlive = !level.getEntitiesOfClass(GuardianEntity.class,
+                new AABB(gate).inflate(48.0D), GuardianEntity::isExpeditionBoss)
+                .stream().filter(GuardianEntity::isAlive).toList().isEmpty();
+        if (bossAlive) {
+            player.displayClientMessage(Component.literal(
+                    "§5Врата запечатаны. Победите Хранителя измерения."), true);
+            return;
+        }
+
         PocketData data = PocketData.get(player.server.overworld());
         PocketData.Home home = data.getHome(player.getUUID()).orElse(null);
         if (home == null) {
