@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.entity.Mob;
+import ru.beyondthebag.entity.GuardianEntity;
 import ru.beyondthebag.registry.ModEntities;
 import ru.beyondthebag.data.PocketData;
 
@@ -157,12 +157,11 @@ public final class MazeWorldBuilder {
             }
 
             // Spawn the chamber guardian once, as part of the deterministic maze build.
-            Mob guardian = ModEntities.GUARDIAN.get().create(level);
+            GuardianEntity guardian = ModEntities.GUARDIAN.get().create(level);
             if (guardian != null) {
-                guardian.moveTo(cx + 0.5D, FLOOR_Y + 1, cz + 0.5D, 0.0F, 0.0F);
+                guardian.setExpeditionBoss(true);
+                guardian.moveTo(cx + 4.5D, FLOOR_Y + 1, cz + 0.5D, 180.0F, 0.0F);
                 guardian.setPersistenceRequired();
-                guardian.setCustomName(net.minecraft.network.chat.Component.literal("Хранитель измерения"));
-                guardian.setCustomNameVisible(true);
                 level.addFreshEntity(guardian);
             }
         }
