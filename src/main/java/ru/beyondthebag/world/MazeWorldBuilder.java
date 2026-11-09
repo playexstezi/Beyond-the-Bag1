@@ -56,9 +56,9 @@ public final class MazeWorldBuilder {
         }
         // Keep the entry clear and recognizable.
         BlockPos entry = new BlockPos(originX, FLOOR_Y, originZ);
-        level.setBlock(entry, Blocks.POLISHED_DEEPSLATE.defaultBlockState(), 3);
-        level.setBlock(entry.above(), Blocks.AIR.defaultBlockState(), 3);
-        level.setBlock(entry.above(2), Blocks.AIR.defaultBlockState(), 3);
+        level.setBlock(entry, Blocks.POLISHED_DEEPSLATE.defaultBlockState(), 2);
+        level.setBlock(entry.above(), Blocks.AIR.defaultBlockState(), 2);
+        level.setBlock(entry.above(2), Blocks.AIR.defaultBlockState(), 2);
         sealTerritory(level, layout, originX, originZ);
     }
 
@@ -77,19 +77,17 @@ public final class MazeWorldBuilder {
         BlockState boundary = Blocks.BEDROCK.defaultBlockState();
         for (int y = FLOOR_Y + 1; y <= FLOOR_Y + TERRITORY_HEIGHT; y++) {
             for (int x = minX; x <= maxX; x++) {
-                level.setBlock(new BlockPos(x, y, minZ), boundary, 3);
-                level.setBlock(new BlockPos(x, y, maxZ), boundary, 3);
+                level.setBlock(new BlockPos(x, y, minZ), boundary, 2);
+                level.setBlock(new BlockPos(x, y, maxZ), boundary, 2);
             }
             for (int z = minZ; z <= maxZ; z++) {
-                level.setBlock(new BlockPos(minX, y, z), boundary, 3);
-                level.setBlock(new BlockPos(maxX, y, z), boundary, 3);
+                level.setBlock(new BlockPos(minX, y, z), boundary, 2);
+                level.setBlock(new BlockPos(maxX, y, z), boundary, 2);
             }
         }
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                level.setBlock(new BlockPos(x, FLOOR_Y + TERRITORY_HEIGHT, z), boundary, 3);
-            }
-        }
+        // Rooms and passages already have continuous solid ceilings at FLOOR_Y + WALL_HEIGHT + 1.
+        // The full-area roof duplicated those ceilings across large empty areas inside the maze bounds.
+        // Keeping the perimeter walls and the existing room/passage ceilings seals all walkable routes.
     }
 
     private static void buildRoom(ServerLevel level, MazeLayout.Room room,
@@ -113,20 +111,20 @@ public final class MazeWorldBuilder {
             for (int dz = -ROOM_RADIUS; dz <= ROOM_RADIUS; dz++) {
                 boolean edge = Math.abs(dx) == ROOM_RADIUS || Math.abs(dz) == ROOM_RADIUS;
                 BlockPos floorPos = new BlockPos(cx + dx, FLOOR_Y, cz + dz);
-                level.setBlock(floorPos, floor, 3);
+                level.setBlock(floorPos, floor, 2);
                 for (int dy = 1; dy <= WALL_HEIGHT; dy++) {
                     BlockPos pos = floorPos.above(dy);
-                    level.setBlock(pos, edge ? wall : Blocks.AIR.defaultBlockState(), 3);
+                    level.setBlock(pos, edge ? wall : Blocks.AIR.defaultBlockState(), 2);
                 }
                 level.setBlock(floorPos.above(WALL_HEIGHT + 1),
-                        Blocks.DEEPSLATE_BRICKS.defaultBlockState(), 3);
+                        Blocks.DEEPSLATE_BRICKS.defaultBlockState(), 2);
             }
         }
 
         if (room.type() == MazeLayout.RoomType.TREASURE
                 || room.type() == MazeLayout.RoomType.RARE) {
             BlockPos chestPos = new BlockPos(cx + 2, FLOOR_Y + 1, cz + 2);
-            level.setBlock(chestPos, Blocks.CHEST.defaultBlockState(), 3);
+            level.setBlock(chestPos, Blocks.CHEST.defaultBlockState(), 2);
             if (level.getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
                 List<ExpeditionLoot.Stack> loot = ExpeditionLoot.generate(
                         expedition.seed(), room.id(), expedition.instability());
@@ -142,23 +140,23 @@ public final class MazeWorldBuilder {
         }
         if (room.type() == MazeLayout.RoomType.HAZARD) {
             level.setBlock(new BlockPos(cx, FLOOR_Y + 1, cz),
-                    Blocks.MAGMA_BLOCK.defaultBlockState(), 3);
+                    Blocks.MAGMA_BLOCK.defaultBlockState(), 2);
         }
         if (room.type() == MazeLayout.RoomType.ANOMALY || room.type() == MazeLayout.RoomType.BOSS) {
             level.setBlock(new BlockPos(cx, FLOOR_Y + 1, cz),
-                    Blocks.SOUL_FIRE.defaultBlockState(), 3);
+                    Blocks.SOUL_FIRE.defaultBlockState(), 2);
         }
         if (room.type() == MazeLayout.RoomType.REST) {
-            level.setBlock(new BlockPos(cx, FLOOR_Y + 1, cz), Blocks.CAMPFIRE.defaultBlockState(), 3);
-            level.setBlock(new BlockPos(cx + 2, FLOOR_Y + 1, cz), Blocks.LANTERN.defaultBlockState(), 3);
+            level.setBlock(new BlockPos(cx, FLOOR_Y + 1, cz), Blocks.CAMPFIRE.defaultBlockState(), 2);
+            level.setBlock(new BlockPos(cx + 2, FLOOR_Y + 1, cz), Blocks.LANTERN.defaultBlockState(), 2);
         }
         if (room.type() == MazeLayout.RoomType.SHRINE) {
-            level.setBlock(new BlockPos(cx, FLOOR_Y + 1, cz), Blocks.RESPAWN_ANCHOR.defaultBlockState(), 3);
-            level.setBlock(new BlockPos(cx + 2, FLOOR_Y + 1, cz), Blocks.SOUL_LANTERN.defaultBlockState(), 3);
+            level.setBlock(new BlockPos(cx, FLOOR_Y + 1, cz), Blocks.RESPAWN_ANCHOR.defaultBlockState(), 2);
+            level.setBlock(new BlockPos(cx + 2, FLOOR_Y + 1, cz), Blocks.SOUL_LANTERN.defaultBlockState(), 2);
         }
         if (room.type() == MazeLayout.RoomType.PUZZLE) {
-            level.setBlock(new BlockPos(cx, FLOOR_Y + 1, cz), Blocks.LODESTONE.defaultBlockState(), 3);
-            level.setBlock(new BlockPos(cx - 2, FLOOR_Y + 1, cz), Blocks.REDSTONE_LAMP.defaultBlockState(), 3);
+            level.setBlock(new BlockPos(cx, FLOOR_Y + 1, cz), Blocks.LODESTONE.defaultBlockState(), 2);
+            level.setBlock(new BlockPos(cx - 2, FLOOR_Y + 1, cz), Blocks.REDSTONE_LAMP.defaultBlockState(), 2);
         }
         if (room.type() == MazeLayout.RoomType.BOSS) {
             // The final chamber contains the expedition's physical return gate.
@@ -166,14 +164,14 @@ public final class MazeWorldBuilder {
                 for (int dz = -1; dz <= 1; dz++) {
                     if (Math.abs(dx) == 1 || Math.abs(dz) == 1) {
                         level.setBlock(new BlockPos(cx + dx, FLOOR_Y + 1, cz + dz),
-                                Blocks.CRYING_OBSIDIAN.defaultBlockState(), 3);
+                                Blocks.CRYING_OBSIDIAN.defaultBlockState(), 2);
                     }
                 }
             }
             level.setBlock(new BlockPos(cx, FLOOR_Y + 1, cz),
-                    Blocks.RESPAWN_ANCHOR.defaultBlockState(), 3);
+                    Blocks.RESPAWN_ANCHOR.defaultBlockState(), 2);
             BlockPos rewardPos = new BlockPos(cx + 3, FLOOR_Y + 1, cz + 3);
-            level.setBlock(rewardPos, Blocks.CHEST.defaultBlockState(), 3);
+            level.setBlock(rewardPos, Blocks.CHEST.defaultBlockState(), 2);
             if (level.getBlockEntity(rewardPos) instanceof ChestBlockEntity chest) {
                 List<ExpeditionLoot.Stack> loot = ExpeditionLoot.generate(
                         expedition.seed() ^ 0xB055L, room.id(), Math.min(4, expedition.instability() + 1));
@@ -222,12 +220,12 @@ public final class MazeWorldBuilder {
         for (int dx = -halfWidth; dx <= halfWidth; dx++) {
             for (int dz = -halfWidth; dz <= halfWidth; dz++) {
                 BlockPos base = new BlockPos(x + dx, y, z + dz);
-                level.setBlock(base, floor, 3);
+                level.setBlock(base, floor, 2);
                 for (int dy = 1; dy <= WALL_HEIGHT; dy++) {
-                    level.setBlock(base.above(dy), Blocks.AIR.defaultBlockState(), 3);
+                    level.setBlock(base.above(dy), Blocks.AIR.defaultBlockState(), 2);
                 }
                 level.setBlock(base.above(WALL_HEIGHT + 1),
-                        Blocks.DEEPSLATE_BRICKS.defaultBlockState(), 3);
+                        Blocks.DEEPSLATE_BRICKS.defaultBlockState(), 2);
             }
         }
     }
