@@ -14,7 +14,7 @@ import java.util.Random;
  */
 public final class MazeLayout {
     public enum RoomType {
-        ENTRY, CORRIDOR, CHAMBER, DEAD_END, TREASURE, HAZARD, ANOMALY, RARE
+        ENTRY, CORRIDOR, CHAMBER, DEAD_END, TREASURE, HAZARD, ANOMALY, RARE, REST, SHRINE, PUZZLE, BOSS
     }
 
     public record Room(int id, int x, int z, RoomType type, int danger,
@@ -41,7 +41,7 @@ public final class MazeLayout {
     public static MazeLayout generate(long seed, int requestedInstability) {
         int instability = Math.max(0, Math.min(4, requestedInstability));
         Random random = new Random(seed);
-        int target = 18 + random.nextInt(9) + instability * 4;
+        int target = 42 + random.nextInt(13) + instability * 7;
         List<MutableRoom> rooms = new ArrayList<>();
         rooms.add(new MutableRoom(0, 0, 0, RoomType.ENTRY));
 
@@ -68,9 +68,12 @@ public final class MazeLayout {
             if (!placed) {
                 // A bounded fallback prevents a pathological seed from looping forever.
                 int radius = 2 + rooms.size();
-                MutableRoom child = new MutableRoom(rooms.size(), radius, 0,
+                int nx = radius;
+                int nz = (rooms.size() % 2 == 0 ? radius : -radius);
+                while (findAt(rooms, nx, nz) != null) { radius++; nx = radius; nz = (rooms.size() % 2 == 0 ? radius : -radius); }
+                MutableRoom child = new MutableRoom(rooms.size(), nx, nz,
                         chooseType(random, rooms.size(), target, instability));
-                MutableRoom nearest = rooms.get(0);
+                MutableRoom nearest = rooms.stream().min((a, b) -> Integer.compare(manhattan(a, child), manhattan(b, child))).orElse(rooms.get(0));
                 child.links.add(nearest.id);
                 nearest.links.add(child.id);
                 rooms.add(child);
@@ -100,13 +103,17 @@ public final class MazeLayout {
     }
 
     private static RoomType chooseType(Random random, int index, int total, int instability) {
-        if (index == total - 1 && random.nextFloat() < 0.55f) return RoomType.RARE;
+        if (index == total - 1) return RoomType.BOSS;
         float roll = random.nextFloat();
-        if (roll < 0.10f) return RoomType.DEAD_END;
-        if (roll < 0.10f + 0.08f + instability * 0.025f) return RoomType.HAZARD;
-        if (roll < 0.22f + instability * 0.06f) return RoomType.ANOMALY;
-        if (roll < 0.29f) return RoomType.TREASURE;
-        if (roll < 0.64f) return RoomType.CORRIDOR;
+        if (roll < 0.07f) return RoomType.DEAD_END;
+        if (roll < 0.17f + instability * 0.025f) return RoomType.HAZARD;
+        if (roll < 0.27f + instability * 0.04f) return RoomType.ANOMALY;
+        if (roll < 0.36f) return RoomType.TREASURE;
+        if (roll < 0.41f) return RoomType.RARE;
+        if (roll < 0.47f) return RoomType.REST;
+        if (roll < 0.53f) return RoomType.SHRINE;
+        if (roll < 0.59f) return RoomType.PUZZLE;
+        if (roll < 0.76f) return RoomType.CORRIDOR;
         return RoomType.CHAMBER;
     }
 
