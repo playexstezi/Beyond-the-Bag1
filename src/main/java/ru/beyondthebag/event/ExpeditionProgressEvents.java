@@ -62,7 +62,7 @@ public final class ExpeditionProgressEvents {
         } else if (sanity <= 30 && sanity > 0) {
             player.displayClientMessage(Component.literal("§7Рассудок: §c" + sanity
                     + "% §8— аномалии всё сильнее влияют на восприятие."), true);
-            if (now % 400L < 20L) {
+            if (true) {
                 player.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 35, 0,
                         false, false, true));
             }
