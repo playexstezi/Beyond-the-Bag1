@@ -124,7 +124,7 @@ public final class MazeWorldBuilder {
         }
         if (room.type() == MazeLayout.RoomType.PUZZLE) {
             level.setBlock(new BlockPos(cx, FLOOR_Y + 1, cz), Blocks.LODESTONE.defaultBlockState(), 3);
-            level.setBlock(new BlockPos(cx - 2, FLOOR_Y + 1, cz), Blocks.COPPER_BULB.defaultBlockState(), 3);
+            level.setBlock(new BlockPos(cx - 2, FLOOR_Y + 1, cz), Blocks.REDSTONE_LAMP.defaultBlockState(), 3);
         }
         if (room.type() == MazeLayout.RoomType.BOSS) {
             level.setBlock(new BlockPos(cx + 2, FLOOR_Y + 1, cz + 2), Blocks.CHEST.defaultBlockState(), 3);
