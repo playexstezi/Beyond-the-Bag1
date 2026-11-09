@@ -11,6 +11,7 @@ import net.minecraftforge.fml.common.Mod;
 import ru.beyondthebag.BeyondTheBag;
 import ru.beyondthebag.entity.MimicEntity;
 
+/** Queues player block actions for delayed imitation in the mimic's own surroundings. */
 @Mod.EventBusSubscriber(modid = BeyondTheBag.MOD_ID)
 public final class MimicActionEvents {
     private MimicActionEvents() {}
@@ -20,7 +21,7 @@ public final class MimicActionEvents {
         if (!(event.getEntity() instanceof ServerPlayer player) || player.isCreative()) return;
         BlockState state = event.getPlacedBlock();
         if (state.isAir() || state.hasBlockEntity()) return;
-        mirrorAction(player, event.getPos(), state, true);
+        queueAction(player, event.getPos(), state, true);
     }
 
     @SubscribeEvent
@@ -29,18 +30,17 @@ public final class MimicActionEvents {
         if (!(breaker instanceof ServerPlayer player) || player.isCreative()) return;
         BlockState state = event.getState();
         if (state.isAir() || state.hasBlockEntity()) return;
-        mirrorAction(player, event.getPos(), state, false);
+        queueAction(player, event.getPos(), state, false);
     }
 
-    private static void mirrorAction(ServerPlayer player, BlockPos sourcePos, BlockState state, boolean place) {
-        double yaw = Math.toRadians(player.getYRot());
-        int sideX = (int) Math.round(Math.cos(yaw) * 2.0D);
-        int sideZ = (int) Math.round(Math.sin(yaw) * 2.0D);
-        BlockPos mirroredPos = sourcePos.offset(sideX, 0, sideZ);
+    private static void queueAction(ServerPlayer player, BlockPos source, BlockState state, boolean place) {
+        BlockPos relative = source.subtract(player.blockPosition());
+        if (Math.abs(relative.getX()) > 4 || Math.abs(relative.getY()) > 3
+                || Math.abs(relative.getZ()) > 4) return;
         for (MimicEntity mimic : player.level().getEntitiesOfClass(MimicEntity.class,
-                new AABB(player.blockPosition()).inflate(24.0D),
-                entity -> player.getUUID().equals(entity.getCopiedPlayerId()))) {
-            mimic.imitateBlockAction(mirroredPos, state, place);
+                new AABB(player.blockPosition()).inflate(40.0D),
+                entity -> player.getUUID().equals(entity.getCopiedPlayerId()) && entity.isAlive())) {
+            mimic.imitateBlockAction(relative, state, place);
         }
     }
 }

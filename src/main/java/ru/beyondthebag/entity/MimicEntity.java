@@ -45,7 +45,7 @@ public final class MimicEntity extends PathfinderMob {
     private final Deque<CopiedBlockAction> copiedActions = new ArrayDeque<>();
     private int messageCooldown, stalkTicks, attackCooldown, retreatTicks, gestureCooldown, blockActionCooldown;
     private int targetRecheckTicks, behaviourTicks, nextRustleTicks = 500, observePauseTicks, freezeTicks;
-    private record CopiedBlockAction(BlockPos pos, BlockState state, boolean place) {}
+    private record CopiedBlockAction(BlockPos relativePos, BlockState state, boolean place, int delay) {}
 
     public MimicEntity(EntityType<? extends PathfinderMob> type, Level level) { super(type, level); }
 
@@ -79,9 +79,12 @@ public final class MimicEntity extends PathfinderMob {
         } catch (IllegalArgumentException ignored) { return null; }
     }
 
-    public void imitateBlockAction(BlockPos pos, BlockState state, boolean place) {
-        if (copiedActions.size() < 8 && !state.hasBlockEntity())
-            copiedActions.addLast(new CopiedBlockAction(pos.immutable(), state, place));
+    public void imitateBlockAction(BlockPos relativePos, BlockState state, boolean place) {
+        if (copiedActions.size() < 8 && !state.hasBlockEntity()
+                && !state.isAir() && !state.is(net.minecraft.world.level.block.Blocks.BEDROCK)) {
+            copiedActions.addLast(new CopiedBlockAction(relativePos.immutable(), state, place,
+                    30 + random.nextInt(71)));
+        }
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -328,16 +331,30 @@ public final class MimicEntity extends PathfinderMob {
     }
 
     private void performCopiedBlockAction(ServerLevel server) {
-        if (blockActionCooldown > 0 || copiedActions.isEmpty()) return;
+        if (copiedActions.isEmpty()) return;
         CopiedBlockAction action = copiedActions.removeFirst();
-        blockActionCooldown = 8;
-        if (distanceToSqr(Vec3.atCenterOf(action.pos())) > 64.0D || !server.hasChunkAt(action.pos())) return;
-        BlockState current = server.getBlockState(action.pos());
+        if (action.delay() > 0) {
+            copiedActions.addLast(new CopiedBlockAction(action.relativePos(), action.state(),
+                    action.place(), action.delay() - 1));
+            return;
+        }
+        if (blockActionCooldown > 0) {
+            copiedActions.addFirst(action);
+            return;
+        }
+        blockActionCooldown = 12 + random.nextInt(13);
+        BlockPos destination = blockPosition().offset(action.relativePos());
+        if (Math.abs(action.relativePos().getX()) > 4 || Math.abs(action.relativePos().getY()) > 3
+                || Math.abs(action.relativePos().getZ()) > 4 || !server.hasChunkAt(destination)) return;
+        BlockState current = server.getBlockState(destination);
         if (action.place()) {
-            if (current.isAir() && !action.state().hasBlockEntity() && action.state().canSurvive(server, action.pos())
-                    && server.setBlock(action.pos(), action.state(), 3)) animateAction(3);
-        } else if (!current.isAir() && !current.hasBlockEntity() && current.is(action.state().getBlock())) {
-            if (server.destroyBlock(action.pos(), true, this)) animateAction(2);
+            if (current.canBeReplaced() && server.getFluidState(destination).isEmpty()
+                    && !action.state().hasBlockEntity() && action.state().canSurvive(server, destination)
+                    && server.setBlock(destination, action.state(), 3)) animateAction(3);
+        } else if (!current.isAir() && !current.hasBlockEntity()
+                && current.is(action.state().getBlock())) {
+            // No drops: the mimic must not duplicate the player's mined resources.
+            if (server.destroyBlock(destination, false, this)) animateAction(2);
         }
     }
 }
