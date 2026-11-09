@@ -164,7 +164,9 @@ public final class GuardianEntity extends Monster {
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
+        float savedHealth = getHealth();
         setExpeditionBoss(tag.getBoolean(BOSS_TAG));
+        if (expeditionBoss) setHealth(Math.min(savedHealth, getMaxHealth()));
         enraged = tag.getBoolean("BeyondTheBagEnraged");
         calledReinforcements = tag.getBoolean("BeyondTheBagReinforcements");
         abilityCooldown = Math.max(1, tag.getInt("BeyondTheBagAbilityCooldown"));
