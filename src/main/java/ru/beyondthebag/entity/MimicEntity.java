@@ -81,7 +81,16 @@ public final class MimicEntity extends PathfinderMob {
         goalSelector.addGoal(6, new RandomLookAroundGoal(this));
     }
 
-    @Override public int getExperienceReward() { return 8 + random.nextInt(8); }\n\n    @Override protected void dropCustomDeathLoot(DamageSource source, int looting, boolean recentlyHit) {\n        super.dropCustomDeathLoot(source, looting, recentlyHit);\n        if (!level().isClientSide && random.nextFloat() < 0.75F) {\n            ItemStack fragment = new ItemStack(ModItems.MIMIC_FRAGMENT.get(), 1 + random.nextInt(2));\n            ItemEntity drop = new ItemEntity(level(), getX(), getY() + 0.25D, getZ(), fragment);\n            level().addFreshEntity(drop);\n        }\n    }
+    @Override public int getExperienceReward() { return 8 + random.nextInt(8); }
+
+    @Override protected void dropCustomDeathLoot(DamageSource source, int looting, boolean recentlyHit) {
+        super.dropCustomDeathLoot(source, looting, recentlyHit);
+        if (!level().isClientSide && random.nextFloat() < 0.75F) {
+            ItemStack fragment = new ItemStack(ModItems.MIMIC_FRAGMENT.get(), 1 + random.nextInt(2));
+            ItemEntity drop = new ItemEntity(level(), getX(), getY() + 0.25D, getZ(), fragment);
+            level().addFreshEntity(drop);
+        }
+    }
 
 
     public void respondToChat(ServerPlayer speaker, String message) {
@@ -89,20 +98,21 @@ public final class MimicEntity extends PathfinderMob {
                 || !speaker.getUUID().equals(getCopiedPlayerId()) || distanceToSqr(speaker) > 1024.0D) return;
         String text = message.toLowerCase(java.util.Locale.ROOT);
         String reply;
-        if (text.contains("мим") || text.contains("кто ты") || text.contains("кто-нибудь")) {
-            reply = "Не понимаю, о чём ты. Я просто иду своей дорогой.";
-        } else if (text.contains("привет") || text.contains("здравств")) {
-            reply = "О, привет. Давно тебя не видел.";
-        } else if (text.contains("куда") || text.contains("ид")) {
-            reply = "Пока сам не решил. Здесь постоянно что-то меняется.";
-        } else if (text.contains("опас") || text.contains("страш") || text.contains("монстр")) {
-            reply = "Да, лучше держаться настороже. Я тоже кое-что заметил.";
+        if (text.contains("привет") || text.contains("здравств")) {
+            reply = "Привет! Давно тебя не видел.";
         } else if (text.contains("спасибо")) {
-            reply = "Да не за что.";
+            reply = "Всегда пожалуйста.";
+        } else if (text.contains("?")) {
+            String[] answers = {"Не знаю точно, но я бы не стал торопиться.",
+                    "Хороший вопрос. Сам над этим думаю.",
+                    "Может быть. А ты как считаешь?",
+                    "Пока не уверен. Посмотрим, что будет дальше."};
+            reply = answers[random.nextInt(answers.length)];
         } else {
-            String[] replies = {"Понимаю тебя.", "Хм, может быть.", "Да, я тоже об этом думал.",
-                    "Здесь иногда лучше не торопиться.", "Интересно. Продолжай, я слушаю.",
-                    "Ага, заметил такое.", "Не уверен, но звучит правдоподобно."};
+            String[] replies = {"Да, понимаю.", "Согласен, здесь странное место.",
+                    "Тоже об этом подумал.", "Посмотрим, что из этого выйдет.",
+                    "Кстати, я заметил кое-что неподалёку.", "Возможно, ты прав.",
+                    "Не уверен. Тут всё какое-то непривычное."};
             reply = replies[random.nextInt(replies.length)];
         }
         String copiedName = speaker.getGameProfile().getName();
