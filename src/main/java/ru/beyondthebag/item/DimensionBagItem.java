@@ -98,6 +98,8 @@ public final class DimensionBagItem extends Item {
                 }
             }
             if (serverLevel.dimension().equals(PERSONAL_WORLD)) {
+                data.setPersonalPosition(serverPlayer.getUUID(), new PocketData.RealmPosition(
+                        serverPlayer.getX(), serverPlayer.getY(), serverPlayer.getZ(), serverPlayer.getYRot(), serverPlayer.getXRot()));
                 PocketData.RealmPosition last = data.getPersonalPosition(serverPlayer.getUUID()).orElse(null);
                 if (last != null) serverPlayer.teleportTo(destination, last.x(), last.y(), last.z(), last.yaw(), last.pitch());
                 else serverPlayer.teleportTo(destination, home.x(), home.y(), home.z(), home.yaw(), home.pitch());

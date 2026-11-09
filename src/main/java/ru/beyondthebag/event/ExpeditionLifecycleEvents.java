@@ -23,10 +23,6 @@ public final class ExpeditionLifecycleEvents {
     @SubscribeEvent
     public static void onDimensionChanged(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        if (event.getFrom().equals(DimensionBagItem.PERSONAL_WORLD)) {
-            PocketData.get(player.server.overworld()).setPersonalPosition(player.getUUID(),
-                    new PocketData.RealmPosition(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot()));
-        }
         if (!event.getFrom().equals(DimensionBagItem.UNSTABLE_WORLD)) return;
         if (event.getTo().equals(DimensionBagItem.UNSTABLE_WORLD)) return;
 
