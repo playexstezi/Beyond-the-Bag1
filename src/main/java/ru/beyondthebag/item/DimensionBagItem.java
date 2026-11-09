@@ -100,6 +100,8 @@ public final class DimensionBagItem extends Item {
             serverPlayer.getPersistentData().remove("beyondthebag_last_sanity_tick");
             serverPlayer.getPersistentData().remove("beyondthebag_expedition_entered_at");
             serverPlayer.getPersistentData().remove("beyondthebag_last_darkness_tick");
+            serverPlayer.getPersistentData().remove("beyondthebag_last_rest_scan_tick");
+            serverPlayer.getPersistentData().remove("beyondthebag_last_rest_tick");
             serverPlayer.displayClientMessage(Component.translatable(
                     fromUnstable ? "message.beyondthebag.expedition_returned"
                             : "message.beyondthebag.expedition_returned"), false);
