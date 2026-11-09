@@ -46,6 +46,14 @@ public final class ExpeditionProgressEvents {
         }
 
         var persistent = player.getPersistentData();
+        // Moss-and-campfire rest chambers slowly restore composure while the explorer stays nearby.
+        long lastRest = persistent.getLong("beyondthebag_last_rest_tick");
+        if (now - lastRest >= 100L && isNearRestChamber(player)) {
+            int currentSanity = persistent.contains(SANITY_KEY) ? persistent.getInt(SANITY_KEY) : 100;
+            persistent.putInt(SANITY_KEY, Math.min(100, currentSanity + 2));
+            persistent.putLong("beyondthebag_last_rest_tick", now);
+            player.displayClientMessage(Component.literal("§aТихая комната помогает восстановить рассудок."), true);
+        }
         if (!persistent.contains(SANITY_KEY)) persistent.putInt(SANITY_KEY, 100);
         if (!persistent.contains(LAST_SANITY_TICK_KEY)) persistent.putLong(LAST_SANITY_TICK_KEY, now);
         long lastTick = persistent.getLong(LAST_SANITY_TICK_KEY);
@@ -74,5 +82,19 @@ public final class ExpeditionProgressEvents {
             player.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 100, 0,
                     false, false, true));
         }
+
+    private static boolean isNearRestChamber(ServerPlayer player) {
+        var level = player.serverLevel();
+        var pos = player.blockPosition();
+        for (int dx = -4; dx <= 4; dx++) {
+            for (int dz = -4; dz <= 4; dz++) {
+                var floor = pos.offset(dx, -1, dz);
+                if (level.getBlockState(floor).is(net.minecraft.world.level.block.Blocks.MOSS_BLOCK)
+                        && level.getBlockState(floor.above()).is(net.minecraft.world.level.block.Blocks.CAMPFIRE)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
