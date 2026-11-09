@@ -36,16 +36,18 @@ public final class StriderSpawner {
         ServerLevel level = player.serverLevel();
         long now = level.getGameTime();
         if (now < NEXT_ATTEMPT.getOrDefault(player.getUUID(), 0L)) return;
-        NEXT_ATTEMPT.put(player.getUUID(), now + 240L);
+        NEXT_ATTEMPT.put(player.getUUID(), now + 180L);
 
         PocketData data = PocketData.get(player.server.overworld());
         PocketData.Expedition expedition = data.getExpedition(player.getUUID()).orElse(null);
-        if (expedition == null || expedition.instability() < 2) return;
+        if (expedition == null || expedition.instability() < 1) return;
 
         AABB area = new AABB(player.blockPosition()).inflate(40.0D);
-        if (!level.getEntitiesOfClass(Mob.class, area,
+        int nearbyThreats = level.getEntitiesOfClass(Mob.class, area,
                 mob -> mob instanceof StriderEntity || mob instanceof WatcherEntity
-                        || mob instanceof DistortedEntity || mob instanceof GuardianEntity).isEmpty()) return;
+                        || mob instanceof DistortedEntity || mob instanceof GuardianEntity).size();
+        int localLimit = 1 + expedition.instability() / 2;
+        if (nearbyThreats >= localLimit) return;
 
         for (int attempt = 0; attempt < 16; attempt++) {
             int dx = level.random.nextInt(25) - 12;
