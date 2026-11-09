@@ -10,6 +10,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.Mob;
+import ru.beyondthebag.registry.ModEntities;
 import ru.beyondthebag.data.PocketData;
 
 /** Places the deterministic expedition graph as a simple, explorable block maze. */
@@ -138,8 +140,31 @@ public final class MazeWorldBuilder {
             }
             level.setBlock(new BlockPos(cx, FLOOR_Y + 1, cz),
                     Blocks.RESPAWN_ANCHOR.defaultBlockState(), 3);
-            level.setBlock(new BlockPos(cx + 3, FLOOR_Y + 1, cz + 3),
-                    Blocks.CHEST.defaultBlockState(), 3);
+            BlockPos rewardPos = new BlockPos(cx + 3, FLOOR_Y + 1, cz + 3);
+            level.setBlock(rewardPos, Blocks.CHEST.defaultBlockState(), 3);
+            if (level.getBlockEntity(rewardPos) instanceof ChestBlockEntity chest) {
+                List<ExpeditionLoot.Stack> loot = ExpeditionLoot.generate(
+                        expedition.seed() ^ 0xB055L, room.id(), Math.min(4, expedition.instability() + 1));
+                int slot = 0;
+                for (ExpeditionLoot.Stack stack : loot) {
+                    var item = BuiltInRegistries.ITEM.get(new ResourceLocation(stack.itemId()));
+                    if (item != net.minecraft.world.item.Items.AIR) {
+                        chest.setItem(slot++, new ItemStack(item, stack.count()));
+                    }
+                }
+                chest.setItem(26, new ItemStack(net.minecraft.world.item.Items.NETHER_STAR));
+                chest.setChanged();
+            }
+
+            // Spawn the chamber guardian once, as part of the deterministic maze build.
+            Mob guardian = ModEntities.GUARDIAN.get().create(level);
+            if (guardian != null) {
+                guardian.moveTo(cx + 0.5D, FLOOR_Y + 1, cz + 0.5D, 0.0F, 0.0F);
+                guardian.setPersistenceRequired();
+                guardian.setCustomName(net.minecraft.network.chat.Component.literal("Хранитель измерения"));
+                guardian.setCustomNameVisible(true);
+                level.addFreshEntity(guardian);
+            }
         }
     }
 
