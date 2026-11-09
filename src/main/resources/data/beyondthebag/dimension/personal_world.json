@@ -2,10 +2,10 @@
   "type": "beyondthebag:personal_world",
   "generator": {
     "type": "minecraft:noise",
-    "settings": "minecraft:overworld",
+    "settings": "beyondthebag:personal_realm",
     "biome_source": {
-      "type": "minecraft:multi_noise",
-      "preset": "minecraft:overworld"
+      "type": "minecraft:fixed",
+      "biome": "beyondthebag:stone_wastes"
     }
   }
 }
