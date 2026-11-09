@@ -24,7 +24,12 @@ import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.level.Level;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.item.ItemStack;
+import ru.beyondthebag.registry.ModItems;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
@@ -34,7 +39,7 @@ public final class MimicEntity extends PathfinderMob {
             SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.STRING);
     private final Deque<CopiedBlockAction> copiedActions = new ArrayDeque<>();
     private int messageCooldown, stalkTicks, attackCooldown, retreatTicks, gestureCooldown, blockActionCooldown;
-    private int targetRecheckTicks, behaviourTicks;
+    private int targetRecheckTicks, behaviourTicks, nextRustleTicks = 500, observePauseTicks, freezeTicks;
     private record CopiedBlockAction(BlockPos pos, BlockState state, boolean place) {}
 
     public MimicEntity(EntityType<? extends PathfinderMob> type, Level level) { super(type, level); }
@@ -75,6 +80,36 @@ public final class MimicEntity extends PathfinderMob {
         goalSelector.addGoal(6, new RandomLookAroundGoal(this));
     }
 
+    @Override public int getExperienceReward() { return 8 + random.nextInt(8); }
+
+
+    public void respondToChat(ServerPlayer speaker, String message) {
+        if (level().isClientSide || !(level() instanceof ServerLevel server) || messageCooldown > 0
+                || !speaker.getUUID().equals(getCopiedPlayerId()) || distanceToSqr(speaker) > 1024.0D) return;
+        String text = message.toLowerCase(java.util.Locale.ROOT);
+        String reply;
+        if (text.contains("мим") || text.contains("кто ты") || text.contains("кто-нибудь")) {
+            reply = "Не понимаю, о чём ты. Я просто иду своей дорогой.";
+        } else if (text.contains("привет") || text.contains("здравств")) {
+            reply = "О, привет. Давно тебя не видел.";
+        } else if (text.contains("куда") || text.contains("ид")) {
+            reply = "Пока сам не решил. Здесь постоянно что-то меняется.";
+        } else if (text.contains("опас") || text.contains("страш") || text.contains("монстр")) {
+            reply = "Да, лучше держаться настороже. Я тоже кое-что заметил.";
+        } else if (text.contains("спасибо")) {
+            reply = "Да не за что.";
+        } else {
+            String[] replies = {"Понимаю тебя.", "Хм, может быть.", "Да, я тоже об этом думал.",
+                    "Здесь иногда лучше не торопиться.", "Интересно. Продолжай, я слушаю.",
+                    "Ага, заметил такое.", "Не уверен, но звучит правдоподобно."};
+            reply = replies[random.nextInt(replies.length)];
+        }
+        String copiedName = speaker.getGameProfile().getName();
+        Component line = Component.literal("<" + copiedName + "> " + reply);
+        for (ServerPlayer recipient : server.players()) recipient.sendSystemMessage(line);
+        messageCooldown = 1200;
+    }
+
     @Override public void tick() {
         super.tick();
         if (level().isClientSide || !(level() instanceof ServerLevel server)) return;
@@ -83,6 +118,9 @@ public final class MimicEntity extends PathfinderMob {
         if (retreatTicks > 0) retreatTicks--;
         if (gestureCooldown > 0) gestureCooldown--;
         if (blockActionCooldown > 0) blockActionCooldown--;
+        if (nextRustleTicks > 0) nextRustleTicks--;
+        if (observePauseTicks > 0) observePauseTicks--;
+        if (freezeTicks > 0) freezeTicks--;
 
         if (targetRecheckTicks-- <= 0) { targetRecheckTicks = 160 + random.nextInt(121); chooseObservedPlayer(server); }
         UUID copiedId = getCopiedPlayerId();
@@ -92,6 +130,8 @@ public final class MimicEntity extends PathfinderMob {
             setTarget(null); getNavigation().stop(); copiedActions.clear(); return;
         }
         performCopiedBlockAction(server);
+        syncCopiedPlayerScale(target);
+        playAmbientRustle(server, target);
 
         AABB playerArea = target.getBoundingBox().inflate(24.0D);
         List<ServerPlayer> nearbyPlayers = server.getEntitiesOfClass(ServerPlayer.class,
@@ -119,13 +159,48 @@ public final class MimicEntity extends PathfinderMob {
         double distance = distanceToSqr(target);
         behaviourTicks++;
         if (behaviourTicks % 40 == 0) {
-            if (distance > 100.0D) {
-                Vec3 offset = Vec3.directionFromRotation(0.0F, random.nextFloat() * 360.0F).scale(2.0D + random.nextDouble() * 3.0D);
-                getNavigation().moveTo(target.getX() + offset.x, target.getY(), target.getZ() + offset.z, 0.85D);
-            } else if (random.nextInt(4) == 0) getNavigation().stop();
-            else {
-                Vec3 wander = Vec3.directionFromRotation(0.0F, random.nextFloat() * 360.0F).scale(2.0D + random.nextDouble() * 5.0D);
-                getNavigation().moveTo(getX() + wander.x, getY(), getZ() + wander.z, 0.72D);
+            // Keep a believable distance instead of constantly walking at the player's shoulder.
+            if (distance > 576.0D) {
+                Vec3 offset = Vec3.directionFromRotation(0.0F, random.nextFloat() * 360.0F)
+                        .scale(9.0D + random.nextDouble() * 6.0D);
+                getNavigation().moveTo(target.getX() + offset.x, target.getY(), target.getZ() + offset.z, 0.92D);
+            } else if (distance > 100.0D) {
+                if (observePauseTicks == 0 && random.nextInt(3) == 0) {
+                    observePauseTicks = 40 + random.nextInt(81);
+                    getNavigation().stop();
+                    getLookControl().setLookAt(target, 25.0F, 25.0F);
+                } else if (observePauseTicks == 0) {
+                    Vec3 flank = Vec3.directionFromRotation(0.0F, random.nextFloat() * 360.0F)
+                            .scale(8.0D + random.nextDouble() * 6.0D);
+                    getNavigation().moveTo(target.getX() + flank.x, target.getY(), target.getZ() + flank.z, 0.68D);
+                } else {
+                    getNavigation().stop();
+                    getLookControl().setLookAt(target, 20.0F, 20.0F);
+                }
+            } else if (distance > 25.0D && distance < 256.0D) {
+                Vec3 toMimic = position().subtract(target.position()).normalize();
+                boolean playerWatching = target.hasLineOfSight(this)
+                        && target.getViewVector(1.0F).dot(toMimic) > 0.72D;
+                if (playerWatching) {
+                    // When noticed, act like an ordinary player who has paused.
+                    getNavigation().stop();
+                    getLookControl().setLookAt(target, 15.0F, 15.0F);
+                    if (freezeTicks == 0 && random.nextInt(5) == 0) freezeTicks = 30 + random.nextInt(51);
+                } else if (freezeTicks > 0) {
+                    getNavigation().stop();
+                } else {
+                    // Advance only while outside the player's view, choosing an offset rather than a direct chase.
+                    Vec3 flank = Vec3.directionFromRotation(0.0F, random.nextFloat() * 360.0F)
+                            .scale(3.0D + random.nextDouble() * 4.0D);
+                    getNavigation().moveTo(target.getX() + flank.x, target.getY(), target.getZ() + flank.z, 0.68D);
+                }
+            } else if (distance >= 256.0D) {
+                Vec3 flank = Vec3.directionFromRotation(0.0F, random.nextFloat() * 360.0F)
+                        .scale(5.0D + random.nextDouble() * 5.0D);
+                getNavigation().moveTo(target.getX() + flank.x, target.getY(), target.getZ() + flank.z, 0.72D);
+            } else {
+                getNavigation().stop();
+                getLookControl().setLookAt(target, 20.0F, 20.0F);
             }
         }
 
@@ -133,8 +208,10 @@ public final class MimicEntity extends PathfinderMob {
             swing(InteractionHand.MAIN_HAND); gestureCooldown = 35;
         }
         if (messageCooldown == 0 && random.nextInt(1800) == 0) {
-            String[] lines = {"Давно здесь ходишь?", "Кажется, я видел тебя раньше.",
-                    "Тут сегодня как-то тихо.", "Ты тоже кого-то заметил?"};
+            String[] lines = {"Кажется, здесь что-то изменилось.", "Я немного осмотрюсь и догоню тебя.",
+                    "Странное сегодня место.", "Надо бы передохнуть.", "Я слышал что-то неподалёку.",
+                    "Похоже, нам сюда.", "Иногда тишина здесь подозрительнее шума.",
+                    "Я уже начинаю привыкать к этому месту."};
             String copiedName = target.getGameProfile().getName();
             Component disguisedMessage = Component.literal("<" + copiedName + "> " + lines[random.nextInt(lines.length)]);
             // Broadcast as an ordinary-looking chat line, without forging a signed player message.
@@ -146,6 +223,65 @@ public final class MimicEntity extends PathfinderMob {
         if (stalkTicks > 2400 && distance < 9.0D && attackCooldown == 0 && nearbyPlayers.size() == 1) {
             target.hurt(server.damageSources().mobAttack(this), 5.0F);
             attackCooldown = 100; stalkTicks = 0; retreatTicks = 80; getNavigation().stop();
+        }
+    }
+
+
+    /**
+     * Pehkui is optional. Read the player's BASE scale and apply it to the mimic
+     * through reflection so the mod still loads when Pehkui is not installed.
+     */
+    private void syncCopiedPlayerScale(ServerPlayer player) {
+        if (tickCount % 40 != 0) return;
+        try {
+            Class<?> scaleTypes = Class.forName("virtuoel.pehkui.api.ScaleTypes");
+            Object baseType = scaleTypes.getField("BASE").get(null);
+            Object playerData = baseType.getClass().getMethod("getScaleData", net.minecraft.world.entity.Entity.class)
+                    .invoke(baseType, player);
+            float scale = ((Number) playerData.getClass().getMethod("getScale").invoke(playerData)).floatValue();
+            Object mimicData = baseType.getClass().getMethod("getScaleData", net.minecraft.world.entity.Entity.class)
+                    .invoke(baseType, this);
+            mimicData.getClass().getMethod("setScale", float.class).invoke(mimicData, scale);
+        } catch (ReflectiveOperationException | LinkageError ignored) {
+            // Vanilla-sized mimic when Pehkui is absent or its API differs.
+        }
+    }
+
+    /**
+     * Occasionally creates a small environmental sound away from both entities.
+     * The sound is anchored to nearby foliage/wood, so it feels like something
+     * moved through the surroundings rather than coming directly from the mimic.
+     */
+    private void playAmbientRustle(ServerLevel server, ServerPlayer target) {
+        if (nextRustleTicks > 0 || distanceToSqr(target) < 9.0D || distanceToSqr(target) > 576.0D) return;
+        nextRustleTicks = 420 + random.nextInt(901);
+
+        BlockPos origin = target.blockPosition();
+        BlockPos soundPos = null;
+        for (int attempt = 0; attempt < 14; attempt++) {
+            int dx = random.nextInt(17) - 8;
+            int dz = random.nextInt(17) - 8;
+            if (dx * dx + dz * dz < 16) continue;
+            BlockPos candidate = server.getHeightmapPos(
+                    net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                    origin.offset(dx, 0, dz));
+            if (!server.hasChunkAt(candidate) || distanceToSqr(Vec3.atCenterOf(candidate)) < 25.0D) continue;
+            BlockState state = server.getBlockState(candidate.below());
+            if (state.is(net.minecraft.tags.BlockTags.LEAVES)
+                    || state.is(net.minecraft.tags.BlockTags.LOGS)
+                    || state.getSoundType().getVolume() > 0.8F) {
+                soundPos = candidate;
+                break;
+            }
+        }
+        if (soundPos == null) return;
+
+        if (random.nextInt(3) == 0) {
+            server.playSound(null, soundPos, SoundEvents.AZALEA_LEAVES_BREAK,
+                    SoundSource.AMBIENT, 0.32F, 0.75F + random.nextFloat() * 0.45F);
+        } else {
+            server.playSound(null, soundPos, SoundEvents.WOOD_BREAK,
+                    SoundSource.AMBIENT, 0.24F, 0.70F + random.nextFloat() * 0.40F);
         }
     }
 

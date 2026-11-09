@@ -1,4 +1,4 @@
-name: Beyond the Bag Build
+name: Beyond the Bag Build # CI for pull requests and feature work
 on:
   push:
     branches: [main, 'development/**', 'feature/**']
