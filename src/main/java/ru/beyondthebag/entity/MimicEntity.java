@@ -24,6 +24,8 @@ import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.level.Level;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.item.ItemStack;
@@ -37,7 +39,7 @@ public final class MimicEntity extends PathfinderMob {
             SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.STRING);
     private final Deque<CopiedBlockAction> copiedActions = new ArrayDeque<>();
     private int messageCooldown, stalkTicks, attackCooldown, retreatTicks, gestureCooldown, blockActionCooldown;
-    private int targetRecheckTicks, behaviourTicks;
+    private int targetRecheckTicks, behaviourTicks, nextRustleTicks = 500;
     private record CopiedBlockAction(BlockPos pos, BlockState state, boolean place) {}
 
     public MimicEntity(EntityType<? extends PathfinderMob> type, Level level) { super(type, level); }
@@ -116,6 +118,7 @@ public final class MimicEntity extends PathfinderMob {
         if (retreatTicks > 0) retreatTicks--;
         if (gestureCooldown > 0) gestureCooldown--;
         if (blockActionCooldown > 0) blockActionCooldown--;
+        if (nextRustleTicks > 0) nextRustleTicks--;
 
         if (targetRecheckTicks-- <= 0) { targetRecheckTicks = 160 + random.nextInt(121); chooseObservedPlayer(server); }
         UUID copiedId = getCopiedPlayerId();
@@ -125,6 +128,8 @@ public final class MimicEntity extends PathfinderMob {
             setTarget(null); getNavigation().stop(); copiedActions.clear(); return;
         }
         performCopiedBlockAction(server);
+        syncCopiedPlayerScale(target);
+        playAmbientRustle(server, target);
 
         AABB playerArea = target.getBoundingBox().inflate(24.0D);
         List<ServerPlayer> nearbyPlayers = server.getEntitiesOfClass(ServerPlayer.class,
@@ -181,6 +186,40 @@ public final class MimicEntity extends PathfinderMob {
         if (stalkTicks > 2400 && distance < 9.0D && attackCooldown == 0 && nearbyPlayers.size() == 1) {
             target.hurt(server.damageSources().mobAttack(this), 5.0F);
             attackCooldown = 100; stalkTicks = 0; retreatTicks = 80; getNavigation().stop();
+        }
+    }
+
+
+    /**
+     * Pehkui is optional. Read the player's BASE scale and apply it to the mimic
+     * through reflection so the mod still loads when Pehkui is not installed.
+     */
+    private void syncCopiedPlayerScale(ServerPlayer player) {
+        if (tickCount % 40 != 0) return;
+        try {
+            Class<?> scaleTypes = Class.forName("virtuoel.pehkui.api.ScaleTypes");
+            Object baseType = scaleTypes.getField("BASE").get(null);
+            Object playerData = baseType.getClass().getMethod("getScaleData", net.minecraft.world.entity.Entity.class)
+                    .invoke(baseType, player);
+            float scale = ((Number) playerData.getClass().getMethod("getScale").invoke(playerData)).floatValue();
+            Object mimicData = baseType.getClass().getMethod("getScaleData", net.minecraft.world.entity.Entity.class)
+                    .invoke(baseType, this);
+            mimicData.getClass().getMethod("setScale", float.class).invoke(mimicData, scale);
+        } catch (ReflectiveOperationException | LinkageError ignored) {
+            // Vanilla-sized mimic when Pehkui is absent or its API differs.
+        }
+    }
+
+    /** Occasional foliage/wood rustles make the mimic feel nearby without constant noise. */
+    private void playAmbientRustle(ServerLevel server, ServerPlayer target) {
+        if (nextRustleTicks > 0 || distanceToSqr(target) < 9.0D || distanceToSqr(target) > 256.0D) return;
+        nextRustleTicks = 500 + random.nextInt(901);
+        if (random.nextBoolean()) {
+            server.playSound(null, blockPosition(), SoundEvents.AZALEA_LEAVES_BREAK,
+                    SoundSource.AMBIENT, 0.28F, 0.75F + random.nextFloat() * 0.35F);
+        } else {
+            server.playSound(null, blockPosition(), SoundEvents.WOOD_BREAK,
+                    SoundSource.AMBIENT, 0.20F, 0.65F + random.nextFloat() * 0.25F);
         }
     }
 
