@@ -1,11 +1,22 @@
 {
   "type": "beyondthebag:personal_world",
   "generator": {
-    "type": "minecraft:noise",
-    "settings": "minecraft:overworld",
-    "biome_source": {
-      "type": "minecraft:multi_noise",
-      "preset": "minecraft:overworld"
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "minecraft:the_void",
+      "features": false,
+      "lakes": false,
+      "layers": [
+        {
+          "height": 1,
+          "block": "minecraft:bedrock"
+        },
+        {
+          "height": 64,
+          "block": "minecraft:stone"
+        }
+      ],
+      "structure_overrides": []
     }
   }
 }
