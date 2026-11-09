@@ -122,7 +122,7 @@ public final class DimensionBagItem extends Item {
         }
 
         // 95% chance to enter the personal realm, 5% chance to enter instability.
-        boolean unstableRoute = ThreadLocalRandom.current().nextInt(100) < 5;
+        boolean unstableRoute = false; // Temporarily disable random instability entry (0% chance).
         ResourceKey<Level> targetKey = unstableRoute ? UNSTABLE_WORLD : PERSONAL_WORLD;
         ServerLevel destination = serverPlayer.server.getLevel(targetKey);
         if (destination == null) {
