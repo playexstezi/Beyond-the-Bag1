@@ -53,7 +53,6 @@ public final class MimicSpawner {
                     new BlockPos(x, player.blockPosition().getY(), z));
             if (!level.getBlockState(surface).isAir() || !level.getBlockState(surface.above()).isAir()
                     || !level.getBlockState(surface.below()).isSolid()) continue;
-            if (player.hasLineOfSight(net.minecraft.world.phys.Vec3.atCenterOf(surface))) continue;
 
             MimicEntity mimic = ModEntities.MIMIC.get().create(level);
             if (mimic == null) return;
