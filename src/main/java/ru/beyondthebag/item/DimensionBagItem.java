@@ -98,12 +98,14 @@ public final class DimensionBagItem extends Item {
                 }
             }
             if (serverLevel.dimension().equals(PERSONAL_WORLD)) {
+                // Remember the position inside the personal realm for the next entry.
+                // The return destination is always the separately saved home anchor.
                 data.setPersonalPosition(serverPlayer.getUUID(), new PocketData.RealmPosition(
-                        serverPlayer.getX(), serverPlayer.getY(), serverPlayer.getZ(), serverPlayer.getYRot(), serverPlayer.getXRot()));
-                PocketData.RealmPosition last = data.getPersonalPosition(serverPlayer.getUUID()).orElse(null);
-                if (last != null) serverPlayer.teleportTo(destination, last.x(), last.y(), last.z(), last.yaw(), last.pitch());
-                else serverPlayer.teleportTo(destination, home.x(), home.y(), home.z(), home.yaw(), home.pitch());
-            } else serverPlayer.teleportTo(destination, home.x(), home.y(), home.z(), home.yaw(), home.pitch());
+                        serverPlayer.getX(), serverPlayer.getY(), serverPlayer.getZ(),
+                        serverPlayer.getYRot(), serverPlayer.getXRot()));
+            }
+            // Never substitute a personal-realm coordinate for the saved home coordinate.
+            serverPlayer.teleportTo(destination, home.x(), home.y(), home.z(), home.yaw(), home.pitch());
             data.clearExpedition(serverPlayer.getUUID());
             serverPlayer.getPersistentData().remove("beyondthebag_sanity");
             serverPlayer.getPersistentData().remove("beyondthebag_last_sanity_tick");
@@ -130,10 +132,13 @@ public final class DimensionBagItem extends Item {
             return InteractionResultHolder.sidedSuccess(stack, false);
         }
 
-        // Only replace the return anchor after the selected destination is confirmed loaded.
-        data.setHome(serverPlayer.getUUID(), new PocketData.Home(
-                serverLevel.dimension().location(), serverPlayer.getX(), serverPlayer.getY(),
-                serverPlayer.getZ(), serverPlayer.getYRot(), serverPlayer.getXRot()));
+        // Preserve a home explicitly saved with Shift + use. Create a fallback only
+        // for players who have never saved one; entering the realm must not overwrite it.
+        if (data.getHome(serverPlayer.getUUID()).isEmpty()) {
+            data.setHome(serverPlayer.getUUID(), new PocketData.Home(
+                    serverLevel.dimension().location(), serverPlayer.getX(), serverPlayer.getY(),
+                    serverPlayer.getZ(), serverPlayer.getYRot(), serverPlayer.getXRot()));
+        }
 
         if (unstableRoute) {
             // Reconcile saved rendezvous entries with players who are physically present.
