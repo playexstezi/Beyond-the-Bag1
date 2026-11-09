@@ -29,6 +29,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.entity.item.ItemEntity;
 import ru.beyondthebag.registry.ModItems;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -80,7 +81,7 @@ public final class MimicEntity extends PathfinderMob {
         goalSelector.addGoal(6, new RandomLookAroundGoal(this));
     }
 
-    @Override public int getExperienceReward() { return 8 + random.nextInt(8); }
+    @Override public int getExperienceReward() { return 8 + random.nextInt(8); }\n\n    @Override protected void dropCustomDeathLoot(DamageSource source, int looting, boolean recentlyHit) {\n        super.dropCustomDeathLoot(source, looting, recentlyHit);\n        if (!level().isClientSide && random.nextFloat() < 0.75F) {\n            ItemStack fragment = new ItemStack(ModItems.MIMIC_FRAGMENT.get(), 1 + random.nextInt(2));\n            ItemEntity drop = new ItemEntity(level(), getX(), getY() + 0.25D, getZ(), fragment);\n            level().addFreshEntity(drop);\n        }\n    }
 
 
     public void respondToChat(ServerPlayer speaker, String message) {
@@ -107,7 +108,7 @@ public final class MimicEntity extends PathfinderMob {
         String copiedName = speaker.getGameProfile().getName();
         Component line = Component.literal("<" + copiedName + "> " + reply);
         for (ServerPlayer recipient : server.players()) recipient.sendSystemMessage(line);
-        messageCooldown = 1200;
+        messageCooldown = 240 + random.nextInt(241);
     }
 
     @Override public void tick() {
