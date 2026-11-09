@@ -20,6 +20,7 @@ public final class MazeWorldBuilder {
     private static final int SPACING = 24;
     private static final int ROOM_RADIUS = 6;
     private static final int WALL_HEIGHT = 6;
+    private static final int TERRITORY_HEIGHT = 18;
 
     private MazeWorldBuilder() {}
 
@@ -58,6 +59,37 @@ public final class MazeWorldBuilder {
         level.setBlock(entry, Blocks.POLISHED_DEEPSLATE.defaultBlockState(), 3);
         level.setBlock(entry.above(), Blocks.AIR.defaultBlockState(), 3);
         level.setBlock(entry.above(2), Blocks.AIR.defaultBlockState(), 3);
+        sealTerritory(level, layout, originX, originZ);
+    }
+
+    /** Prevents leaving the expedition by climbing, digging, or flying above it. */
+    private static void sealTerritory(ServerLevel level, MazeLayout layout, int originX, int originZ) {
+        int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
+        int minZ = Integer.MAX_VALUE, maxZ = Integer.MIN_VALUE;
+        for (MazeLayout.Room room : layout.rooms()) {
+            int x = originX + room.x() * SPACING;
+            int z = originZ + room.z() * SPACING;
+            minX = Math.min(minX, x - ROOM_RADIUS - 2);
+            maxX = Math.max(maxX, x + ROOM_RADIUS + 2);
+            minZ = Math.min(minZ, z - ROOM_RADIUS - 2);
+            maxZ = Math.max(maxZ, z + ROOM_RADIUS + 2);
+        }
+        BlockState boundary = Blocks.BEDROCK.defaultBlockState();
+        for (int y = FLOOR_Y + 1; y <= FLOOR_Y + TERRITORY_HEIGHT; y++) {
+            for (int x = minX; x <= maxX; x++) {
+                level.setBlock(new BlockPos(x, y, minZ), boundary, 3);
+                level.setBlock(new BlockPos(x, y, maxZ), boundary, 3);
+            }
+            for (int z = minZ; z <= maxZ; z++) {
+                level.setBlock(new BlockPos(minX, y, z), boundary, 3);
+                level.setBlock(new BlockPos(maxX, y, z), boundary, 3);
+            }
+        }
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                level.setBlock(new BlockPos(x, FLOOR_Y + TERRITORY_HEIGHT, z), boundary, 3);
+            }
+        }
     }
 
     private static void buildRoom(ServerLevel level, MazeLayout.Room room,
