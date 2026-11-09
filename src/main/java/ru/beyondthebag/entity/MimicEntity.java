@@ -39,7 +39,7 @@ public final class MimicEntity extends PathfinderMob {
             SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.STRING);
     private final Deque<CopiedBlockAction> copiedActions = new ArrayDeque<>();
     private int messageCooldown, stalkTicks, attackCooldown, retreatTicks, gestureCooldown, blockActionCooldown;
-    private int targetRecheckTicks, behaviourTicks, nextRustleTicks = 500, observePauseTicks;
+    private int targetRecheckTicks, behaviourTicks, nextRustleTicks = 500, observePauseTicks, freezeTicks;
     private record CopiedBlockAction(BlockPos pos, BlockState state, boolean place) {}
 
     public MimicEntity(EntityType<? extends PathfinderMob> type, Level level) { super(type, level); }
@@ -120,6 +120,7 @@ public final class MimicEntity extends PathfinderMob {
         if (blockActionCooldown > 0) blockActionCooldown--;
         if (nextRustleTicks > 0) nextRustleTicks--;
         if (observePauseTicks > 0) observePauseTicks--;
+        if (freezeTicks > 0) freezeTicks--;
 
         if (targetRecheckTicks-- <= 0) { targetRecheckTicks = 160 + random.nextInt(121); chooseObservedPlayer(server); }
         UUID copiedId = getCopiedPlayerId();
@@ -176,10 +177,27 @@ public final class MimicEntity extends PathfinderMob {
                     getNavigation().stop();
                     getLookControl().setLookAt(target, 20.0F, 20.0F);
                 }
-            } else if (distance > 25.0D && random.nextInt(3) != 0) {
+            } else if (distance > 25.0D && distance < 256.0D) {
+                Vec3 toMimic = position().subtract(target.position()).normalize();
+                boolean playerWatching = target.hasLineOfSight(this)
+                        && target.getViewVector(1.0F).dot(toMimic) > 0.72D;
+                if (playerWatching) {
+                    // When noticed, act like an ordinary player who has paused.
+                    getNavigation().stop();
+                    getLookControl().setLookAt(target, 15.0F, 15.0F);
+                    if (freezeTicks == 0 && random.nextInt(5) == 0) freezeTicks = 30 + random.nextInt(51);
+                } else if (freezeTicks > 0) {
+                    getNavigation().stop();
+                } else {
+                    // Advance only while outside the player's view, choosing an offset rather than a direct chase.
+                    Vec3 flank = Vec3.directionFromRotation(0.0F, random.nextFloat() * 360.0F)
+                            .scale(3.0D + random.nextDouble() * 4.0D);
+                    getNavigation().moveTo(target.getX() + flank.x, target.getY(), target.getZ() + flank.z, 0.68D);
+                }
+            } else if (distance >= 256.0D) {
                 Vec3 flank = Vec3.directionFromRotation(0.0F, random.nextFloat() * 360.0F)
-                        .scale(3.0D + random.nextDouble() * 4.0D);
-                getNavigation().moveTo(target.getX() + flank.x, target.getY(), target.getZ() + flank.z, 0.62D);
+                        .scale(5.0D + random.nextDouble() * 5.0D);
+                getNavigation().moveTo(target.getX() + flank.x, target.getY(), target.getZ() + flank.z, 0.72D);
             } else {
                 getNavigation().stop();
                 getLookControl().setLookAt(target, 20.0F, 20.0F);
