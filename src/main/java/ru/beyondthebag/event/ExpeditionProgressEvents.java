@@ -19,7 +19,7 @@ import ru.beyondthebag.item.DimensionBagItem;
 public final class ExpeditionProgressEvents {
     private static final String SANITY_KEY = "beyondthebag_sanity";
     private static final String LAST_SANITY_TICK_KEY = "beyondthebag_last_sanity_tick";
-    private static final String LAST_LEVEL_KEY = "beyondthebag_last_instability_level";
+    private static final String LAST_DARKNESS_TICK_KEY = "beyondthebag_last_darkness_tick";
 
     private ExpeditionProgressEvents() {}
 
@@ -62,9 +62,11 @@ public final class ExpeditionProgressEvents {
         } else if (sanity <= 30 && sanity > 0) {
             player.displayClientMessage(Component.literal("§7Рассудок: §c" + sanity
                     + "% §8— аномалии всё сильнее влияют на восприятие."), true);
-            if (true) {
+            long lastDarkness = persistent.getLong(LAST_DARKNESS_TICK_KEY);
+            if (now - lastDarkness >= 240L) {
                 player.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 35, 0,
                         false, false, true));
+                persistent.putLong(LAST_DARKNESS_TICK_KEY, now);
             }
         } else if (sanity == 0) {
             player.displayClientMessage(Component.literal(
