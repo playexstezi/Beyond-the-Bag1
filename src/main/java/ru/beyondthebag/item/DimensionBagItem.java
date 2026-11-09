@@ -94,6 +94,8 @@ public final class DimensionBagItem extends Item {
             serverPlayer.teleportTo(destination, home.x(), home.y(), home.z(),
                     home.yaw(), home.pitch());
             data.clearExpedition(serverPlayer.getUUID());
+            serverPlayer.getPersistentData().remove("beyondthebag_sanity");
+            serverPlayer.getPersistentData().remove("beyondthebag_last_sanity_tick");
             serverPlayer.displayClientMessage(Component.translatable(
                     fromUnstable ? "message.beyondthebag.expedition_returned"
                             : "message.beyondthebag.expedition_returned"), false);
