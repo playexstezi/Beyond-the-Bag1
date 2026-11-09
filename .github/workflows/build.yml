@@ -1,7 +1,7 @@
 name: Beyond the Bag Build
 on:
   push:
-    branches: [main, 'development/**']
+    branches: [main, 'development/**', 'feature/**']
   workflow_dispatch:
 permissions:
   contents: read
