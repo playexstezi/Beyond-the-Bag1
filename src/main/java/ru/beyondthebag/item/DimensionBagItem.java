@@ -80,8 +80,10 @@ public final class DimensionBagItem extends Item {
             if (fromUnstable) {
                 PocketData.Expedition expedition = data.getExpedition(serverPlayer.getUUID()).orElse(null);
                 if (expedition != null) {
-                    long elapsed = Math.max(0L, serverPlayer.server.overworld().getGameTime()
-                            - expedition.startedAt());
+                    long enteredAt = serverPlayer.getPersistentData().contains("beyondthebag_expedition_entered_at")
+                            ? serverPlayer.getPersistentData().getLong("beyondthebag_expedition_entered_at")
+                            : expedition.startedAt();
+                    long elapsed = Math.max(0L, serverPlayer.server.overworld().getGameTime() - enteredAt);
                     if (elapsed < 12_000L) {
                         long remainingSeconds = (12_000L - elapsed + 19L) / 20L;
                         serverPlayer.displayClientMessage(Component.literal(
@@ -96,6 +98,8 @@ public final class DimensionBagItem extends Item {
             data.clearExpedition(serverPlayer.getUUID());
             serverPlayer.getPersistentData().remove("beyondthebag_sanity");
             serverPlayer.getPersistentData().remove("beyondthebag_last_sanity_tick");
+            serverPlayer.getPersistentData().remove("beyondthebag_expedition_entered_at");
+            serverPlayer.getPersistentData().remove("beyondthebag_last_darkness_tick");
             serverPlayer.displayClientMessage(Component.translatable(
                     fromUnstable ? "message.beyondthebag.expedition_returned"
                             : "message.beyondthebag.expedition_returned"), false);
@@ -135,6 +139,8 @@ public final class DimensionBagItem extends Item {
             int expeditionZ = Math.floorMod((int) expedition.seed(), 8192) * 16;
             BlockPos spawn = MazeWorldBuilder.buildIfNeeded(
                     destination, data, expedition, expeditionX, expeditionZ);
+            serverPlayer.getPersistentData().putLong("beyondthebag_expedition_entered_at",
+                    serverPlayer.server.overworld().getGameTime());
             serverPlayer.teleportTo(destination, spawn.getX() + 0.5, spawn.getY(),
                     spawn.getZ() + 0.5, serverPlayer.getYRot(), serverPlayer.getXRot());
             serverPlayer.displayClientMessage(Component.translatable(
