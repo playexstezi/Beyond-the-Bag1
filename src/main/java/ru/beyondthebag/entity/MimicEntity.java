@@ -210,16 +210,41 @@ public final class MimicEntity extends PathfinderMob {
         }
     }
 
-    /** Occasional foliage/wood rustles make the mimic feel nearby without constant noise. */
+    /**
+     * Occasionally creates a small environmental sound away from both entities.
+     * The sound is anchored to nearby foliage/wood, so it feels like something
+     * moved through the surroundings rather than coming directly from the mimic.
+     */
     private void playAmbientRustle(ServerLevel server, ServerPlayer target) {
-        if (nextRustleTicks > 0 || distanceToSqr(target) < 9.0D || distanceToSqr(target) > 256.0D) return;
-        nextRustleTicks = 500 + random.nextInt(901);
-        if (random.nextBoolean()) {
-            server.playSound(null, blockPosition(), SoundEvents.AZALEA_LEAVES_BREAK,
-                    SoundSource.AMBIENT, 0.28F, 0.75F + random.nextFloat() * 0.35F);
+        if (nextRustleTicks > 0 || distanceToSqr(target) < 9.0D || distanceToSqr(target) > 576.0D) return;
+        nextRustleTicks = 420 + random.nextInt(901);
+
+        BlockPos origin = target.blockPosition();
+        BlockPos soundPos = null;
+        for (int attempt = 0; attempt < 14; attempt++) {
+            int dx = random.nextInt(17) - 8;
+            int dz = random.nextInt(17) - 8;
+            if (dx * dx + dz * dz < 16) continue;
+            BlockPos candidate = server.getHeightmapPos(
+                    net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                    origin.offset(dx, 0, dz));
+            if (!server.hasChunkAt(candidate) || distanceToSqr(Vec3.atCenterOf(candidate)) < 25.0D) continue;
+            BlockState state = server.getBlockState(candidate.below());
+            if (state.is(net.minecraft.tags.BlockTags.LEAVES)
+                    || state.is(net.minecraft.tags.BlockTags.LOGS)
+                    || state.getSoundType().getVolume() > 0.8F) {
+                soundPos = candidate;
+                break;
+            }
+        }
+        if (soundPos == null) return;
+
+        if (random.nextInt(3) == 0) {
+            server.playSound(null, soundPos, SoundEvents.AZALEA_LEAVES_BREAK,
+                    SoundSource.AMBIENT, 0.32F, 0.75F + random.nextFloat() * 0.45F);
         } else {
-            server.playSound(null, blockPosition(), SoundEvents.WOOD_BREAK,
-                    SoundSource.AMBIENT, 0.20F, 0.65F + random.nextFloat() * 0.25F);
+            server.playSound(null, soundPos, SoundEvents.WOOD_BREAK,
+                    SoundSource.AMBIENT, 0.24F, 0.70F + random.nextFloat() * 0.40F);
         }
     }
 
