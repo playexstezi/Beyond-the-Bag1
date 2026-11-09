@@ -39,7 +39,7 @@ public final class MimicEntity extends PathfinderMob {
             SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.STRING);
     private final Deque<CopiedBlockAction> copiedActions = new ArrayDeque<>();
     private int messageCooldown, stalkTicks, attackCooldown, retreatTicks, gestureCooldown, blockActionCooldown;
-    private int targetRecheckTicks, behaviourTicks, nextRustleTicks = 500;
+    private int targetRecheckTicks, behaviourTicks, nextRustleTicks = 500, observePauseTicks;
     private record CopiedBlockAction(BlockPos pos, BlockState state, boolean place) {}
 
     public MimicEntity(EntityType<? extends PathfinderMob> type, Level level) { super(type, level); }
@@ -119,6 +119,7 @@ public final class MimicEntity extends PathfinderMob {
         if (gestureCooldown > 0) gestureCooldown--;
         if (blockActionCooldown > 0) blockActionCooldown--;
         if (nextRustleTicks > 0) nextRustleTicks--;
+        if (observePauseTicks > 0) observePauseTicks--;
 
         if (targetRecheckTicks-- <= 0) { targetRecheckTicks = 160 + random.nextInt(121); chooseObservedPlayer(server); }
         UUID copiedId = getCopiedPlayerId();
@@ -157,13 +158,31 @@ public final class MimicEntity extends PathfinderMob {
         double distance = distanceToSqr(target);
         behaviourTicks++;
         if (behaviourTicks % 40 == 0) {
-            if (distance > 100.0D) {
-                Vec3 offset = Vec3.directionFromRotation(0.0F, random.nextFloat() * 360.0F).scale(2.0D + random.nextDouble() * 3.0D);
-                getNavigation().moveTo(target.getX() + offset.x, target.getY(), target.getZ() + offset.z, 0.85D);
-            } else if (random.nextInt(4) == 0) getNavigation().stop();
-            else {
-                Vec3 wander = Vec3.directionFromRotation(0.0F, random.nextFloat() * 360.0F).scale(2.0D + random.nextDouble() * 5.0D);
-                getNavigation().moveTo(getX() + wander.x, getY(), getZ() + wander.z, 0.72D);
+            // Keep a believable distance instead of constantly walking at the player's shoulder.
+            if (distance > 576.0D) {
+                Vec3 offset = Vec3.directionFromRotation(0.0F, random.nextFloat() * 360.0F)
+                        .scale(9.0D + random.nextDouble() * 6.0D);
+                getNavigation().moveTo(target.getX() + offset.x, target.getY(), target.getZ() + offset.z, 0.92D);
+            } else if (distance > 100.0D) {
+                if (observePauseTicks == 0 && random.nextInt(3) == 0) {
+                    observePauseTicks = 40 + random.nextInt(81);
+                    getNavigation().stop();
+                    getLookControl().setLookAt(target, 25.0F, 25.0F);
+                } else if (observePauseTicks == 0) {
+                    Vec3 flank = Vec3.directionFromRotation(0.0F, random.nextFloat() * 360.0F)
+                            .scale(8.0D + random.nextDouble() * 6.0D);
+                    getNavigation().moveTo(target.getX() + flank.x, target.getY(), target.getZ() + flank.z, 0.68D);
+                } else {
+                    getNavigation().stop();
+                    getLookControl().setLookAt(target, 20.0F, 20.0F);
+                }
+            } else if (distance > 25.0D && random.nextInt(3) != 0) {
+                Vec3 flank = Vec3.directionFromRotation(0.0F, random.nextFloat() * 360.0F)
+                        .scale(3.0D + random.nextDouble() * 4.0D);
+                getNavigation().moveTo(target.getX() + flank.x, target.getY(), target.getZ() + flank.z, 0.62D);
+            } else {
+                getNavigation().stop();
+                getLookControl().setLookAt(target, 20.0F, 20.0F);
             }
         }
 
