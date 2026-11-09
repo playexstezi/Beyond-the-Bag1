@@ -78,15 +78,8 @@ public final class MimicEntity extends PathfinderMob {
         goalSelector.addGoal(6, new RandomLookAroundGoal(this));
     }
 
-    @Override protected int getExperienceReward() { return 8 + random.nextInt(8); }
+    @Override public int getExperienceReward() { return 8 + random.nextInt(8); }
 
-    @Override protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean recentlyHit) {
-        super.dropCustomDeathLoot(level, source, recentlyHit);
-        if (random.nextFloat() < 0.85F) {
-            int count = 1 + random.nextInt(2);
-            spawnAtLocation(new ItemStack(ModItems.MIMIC_SHARD.get(), count));
-        }
-    }
 
     public void respondToChat(ServerPlayer speaker, String message) {
         if (level().isClientSide || !(level() instanceof ServerLevel server) || messageCooldown > 0
