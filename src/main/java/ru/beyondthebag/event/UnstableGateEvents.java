@@ -70,5 +70,7 @@ public final class UnstableGateEvents {
         data.remove("beyondthebag_last_sanity_tick");
         data.remove("beyondthebag_expedition_entered_at");
         data.remove("beyondthebag_last_darkness_tick");
+        data.remove("beyondthebag_last_rest_scan_tick");
+        data.remove("beyondthebag_last_rest_tick");
     }
 }
