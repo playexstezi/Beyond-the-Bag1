@@ -38,6 +38,10 @@ import net.minecraft.world.phys.Vec3;
 public final class MimicEntity extends PathfinderMob {
     private static final EntityDataAccessor<String> COPIED_PLAYER =
             SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Integer> ACTION_ANIMATION =
+            SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> ACTION_ANIMATION_TICKS =
+            SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.INT);
     private final Deque<CopiedBlockAction> copiedActions = new ArrayDeque<>();
     private int messageCooldown, stalkTicks, attackCooldown, retreatTicks, gestureCooldown, blockActionCooldown;
     private int targetRecheckTicks, behaviourTicks, nextRustleTicks = 500, observePauseTicks, freezeTicks;
@@ -48,12 +52,24 @@ public final class MimicEntity extends PathfinderMob {
     @Override protected void defineSynchedData() {
         super.defineSynchedData();
         entityData.define(COPIED_PLAYER, "");
+        entityData.define(ACTION_ANIMATION, 0);
+        entityData.define(ACTION_ANIMATION_TICKS, 0);
     }
 
     public void copyPlayer(ServerPlayer player) {
         entityData.set(COPIED_PLAYER, player.getUUID().toString());
         setCustomName(Component.literal(player.getGameProfile().getName()));
         setCustomNameVisible(true);
+    }
+
+    public int getActionAnimation() { return entityData.get(ACTION_ANIMATION); }
+    public int getActionAnimationTicks() { return entityData.get(ACTION_ANIMATION_TICKS); }
+
+    public void animateAction(int action) {
+        if (!level().isClientSide) {
+            entityData.set(ACTION_ANIMATION, action);
+            entityData.set(ACTION_ANIMATION_TICKS, 10);
+        }
     }
 
     public UUID getCopiedPlayerId() {
@@ -125,6 +141,7 @@ public final class MimicEntity extends PathfinderMob {
         super.tick();
         if (level().isClientSide || !(level() instanceof ServerLevel server)) return;
         if (messageCooldown > 0) messageCooldown--;
+        if (getActionAnimationTicks() > 0) entityData.set(ACTION_ANIMATION_TICKS, getActionAnimationTicks() - 1);
         if (attackCooldown > 0) attackCooldown--;
         if (retreatTicks > 0) retreatTicks--;
         if (gestureCooldown > 0) gestureCooldown--;
@@ -304,6 +321,12 @@ public final class MimicEntity extends PathfinderMob {
             if (!best.getUUID().equals(getCopiedPlayerId())) { copyPlayer(best); stalkTicks = 0; copiedActions.clear(); }
         }
     }
+    @Override public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
+        boolean hit = super.doHurtTarget(target);
+        if (hit) animateAction(1);
+        return hit;
+    }
+
     private void performCopiedBlockAction(ServerLevel server) {
         if (blockActionCooldown > 0 || copiedActions.isEmpty()) return;
         CopiedBlockAction action = copiedActions.removeFirst();
@@ -311,10 +334,10 @@ public final class MimicEntity extends PathfinderMob {
         if (distanceToSqr(Vec3.atCenterOf(action.pos())) > 64.0D || !server.hasChunkAt(action.pos())) return;
         BlockState current = server.getBlockState(action.pos());
         if (action.place()) {
-            if (current.isAir() && !action.state().hasBlockEntity() && action.state().canSurvive(server, action.pos()))
-                server.setBlock(action.pos(), action.state(), 3);
+            if (current.isAir() && !action.state().hasBlockEntity() && action.state().canSurvive(server, action.pos())
+                    && server.setBlock(action.pos(), action.state(), 3)) animateAction(3);
         } else if (!current.isAir() && !current.hasBlockEntity() && current.is(action.state().getBlock())) {
-            server.destroyBlock(action.pos(), true, this);
+            if (server.destroyBlock(action.pos(), true, this)) animateAction(2);
         }
     }
 }

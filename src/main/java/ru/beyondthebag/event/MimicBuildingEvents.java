@@ -36,7 +36,7 @@ public final class MimicBuildingEvents {
                     || !level.getFluidState(destination).isEmpty()) continue;
             BlockPos below = destination.below();
             if (!level.getBlockState(below).isFaceSturdy(level, below, Direction.UP)) continue;
-            level.setBlock(destination, state, 3);
+            if (level.setBlock(destination, state, 3)) mimic.animateAction(3);
         }
     }
 
@@ -55,7 +55,7 @@ public final class MimicBuildingEvents {
             BlockState mirrored = level.getBlockState(destination);
             if (unsafeToCopy(mirrored) || level.getBlockEntity(destination) != null) continue;
             // Mirrored mining does not duplicate item drops.
-            level.destroyBlock(destination, false);
+            if (level.destroyBlock(destination, false)) mimic.animateAction(2);
         }
     }
 

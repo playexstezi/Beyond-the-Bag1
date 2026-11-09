@@ -43,6 +43,20 @@ public final class MimicModel extends HierarchicalModel<MimicEntity> {
         rightLeg.xRot=Mth.cos(limbSwing*.6662F+Mth.PI)*1.2F*limbSwingAmount;
         leftArm.xRot=Mth.cos(limbSwing*.6662F+Mth.PI)*.7F*limbSwingAmount;
         rightArm.xRot=Mth.cos(limbSwing*.6662F)*.7F*limbSwingAmount;
+        int action = entity.getActionAnimation();
+        int remaining = entity.getActionAnimationTicks();
+        if (action != 0 && remaining > 0) {
+            float progress = (10.0F - remaining) / 10.0F;
+            float pulse = Mth.sin(progress * Mth.PI);
+            float swing = action == 1 ? -1.8F : action == 2 ? -1.35F : -1.05F;
+            if (action == 2) {
+                rightArm.xRot += swing * pulse;
+                leftArm.xRot -= 0.35F * pulse;
+            } else {
+                rightArm.xRot += swing * pulse;
+                leftArm.xRot += 0.18F * pulse;
+            }
+        }
         body.y=5+Mth.cos(ageInTicks*.08F)*.15F;
     }
 }
