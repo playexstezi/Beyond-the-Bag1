@@ -82,6 +82,7 @@ public final class ExpeditionProgressEvents {
             player.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 100, 0,
                     false, false, true));
         }
+    }
 
     private static boolean isNearRestChamber(ServerPlayer player) {
         var level = player.serverLevel();
