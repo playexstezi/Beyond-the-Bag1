@@ -114,7 +114,8 @@ public final class MimicEntity extends PathfinderMob {
 
     public void respondToChat(ServerPlayer speaker, String message) {
         if (level().isClientSide || !(level() instanceof ServerLevel server) || messageCooldown > 0
-                || !speaker.getUUID().equals(getCopiedPlayerId()) || distanceToSqr(speaker) > 1024.0D) return;
+                || !speaker.getUUID().equals(getCopiedPlayerId()) || distanceToSqr(speaker) > 1024.0D
+                || random.nextInt(9) != 0) return;
         String text = message.toLowerCase(java.util.Locale.ROOT);
         String reply;
         if (text.contains("привет") || text.contains("здравств")) {
@@ -137,7 +138,7 @@ public final class MimicEntity extends PathfinderMob {
         String copiedName = speaker.getGameProfile().getName();
         Component line = Component.literal("<" + copiedName + "> " + reply);
         for (ServerPlayer recipient : server.players()) recipient.sendSystemMessage(line);
-        messageCooldown = 240 + random.nextInt(241);
+        messageCooldown = 900 + random.nextInt(901);
     }
 
     @Override public void tick() {
@@ -189,7 +190,7 @@ public final class MimicEntity extends PathfinderMob {
         setCustomName(Component.literal(target.getGameProfile().getName()));
         double distance = distanceToSqr(target);
         behaviourTicks++;
-        if (behaviourTicks % 40 == 0) {
+        if (behaviourTicks % (50 + random.nextInt(31)) == 0) {
             // Keep a believable distance instead of constantly walking at the player's shoulder.
             if (distance > 576.0D) {
                 Vec3 offset = Vec3.directionFromRotation(0.0F, random.nextFloat() * 360.0F)
@@ -235,8 +236,8 @@ public final class MimicEntity extends PathfinderMob {
             }
         }
 
-        if (gestureCooldown == 0 && target.isUsingItem()) {
-            swing(InteractionHand.MAIN_HAND); gestureCooldown = 35;
+        if (gestureCooldown == 0 && target.isUsingItem() && random.nextInt(4) == 0) {
+            swing(InteractionHand.MAIN_HAND); gestureCooldown = 70 + random.nextInt(91);
         }
 
         if (stalkTicks > 2400 && distance < 9.0D && attackCooldown == 0 && nearbyPlayers.size() == 1) {
