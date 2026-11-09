@@ -17,7 +17,7 @@ import ru.beyondthebag.BeyondTheBag;
 import ru.beyondthebag.entity.MimicEntity;
 import ru.beyondthebag.registry.ModEntities;
 
-/** Rare overworld encounters; the Mimic only approaches a lone player. */
+/** Rare Overworld encounters. A mimic spawns only near one isolated player. */
 @Mod.EventBusSubscriber(modid = BeyondTheBag.MOD_ID)
 public final class MimicSpawner {
     private static final Map<UUID, Long> NEXT_ATTEMPT = new ConcurrentHashMap<>();
@@ -37,18 +37,23 @@ public final class MimicSpawner {
         AABB area = new AABB(player.blockPosition()).inflate(24.0D);
         long nearbyPlayers = level.getEntitiesOfClass(Player.class, area,
                 p -> p.isAlive() && !p.isSpectator()).size();
-        if (nearbyPlayers != 1) return;
+        if (nearbyPlayers == 0) return;
         if (!level.getEntitiesOfClass(MimicEntity.class, area).isEmpty()) return;
         if (level.random.nextInt(5) != 0) return;
 
-        for (int attempt = 0; attempt < 12; attempt++) {
-            int x = player.blockPosition().getX() + level.random.nextInt(25) - 12;
-            int z = player.blockPosition().getZ() + level.random.nextInt(25) - 12;
-            if (Math.abs(x - player.getX()) + Math.abs(z - player.getZ()) < 8) continue;
+        for (int attempt = 0; attempt < 24; attempt++) {
+            // Spawn outside the immediate bubble and, whenever possible, beyond direct sight.
+            int x = player.blockPosition().getX() + level.random.nextInt(49) - 24;
+            int z = player.blockPosition().getZ() + level.random.nextInt(49) - 24;
+            double dx = x + 0.5D - player.getX();
+            double dz = z + 0.5D - player.getZ();
+            double horizontalDistanceSqr = dx * dx + dz * dz;
+            if (horizontalDistanceSqr < 256.0D || horizontalDistanceSqr > 784.0D) continue;
             BlockPos surface = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                     new BlockPos(x, player.blockPosition().getY(), z));
-            if (!level.getBlockState(surface).isAir()
-                    || !level.getBlockState(surface.above()).isAir()) continue;
+            if (!level.getBlockState(surface).isAir() || !level.getBlockState(surface.above()).isAir()
+                    || !level.getBlockState(surface.below()).isSolid()) continue;
+
             MimicEntity mimic = ModEntities.MIMIC.get().create(level);
             if (mimic == null) return;
             mimic.moveTo(surface.getX() + 0.5D, surface.getY(), surface.getZ() + 0.5D,
