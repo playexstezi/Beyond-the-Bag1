@@ -47,12 +47,16 @@ public final class ExpeditionProgressEvents {
 
         var persistent = player.getPersistentData();
         // Moss-and-campfire rest chambers slowly restore composure while the explorer stays nearby.
-        long lastRest = persistent.getLong("beyondthebag_last_rest_tick");
-        if (now - lastRest >= 100L && isNearRestChamber(player)) {
-            int currentSanity = persistent.contains(SANITY_KEY) ? persistent.getInt(SANITY_KEY) : 100;
-            persistent.putInt(SANITY_KEY, Math.min(100, currentSanity + 2));
-            persistent.putLong("beyondthebag_last_rest_tick", now);
-            player.displayClientMessage(Component.literal("§aТихая комната помогает восстановить рассудок."), true);
+        long lastRestScan = persistent.getLong("beyondthebag_last_rest_scan_tick");
+        if (now - lastRestScan >= 20L) {
+            persistent.putLong("beyondthebag_last_rest_scan_tick", now);
+            long lastRest = persistent.getLong("beyondthebag_last_rest_tick");
+            if (now - lastRest >= 100L && isNearRestChamber(player)) {
+                int currentSanity = persistent.contains(SANITY_KEY) ? persistent.getInt(SANITY_KEY) : 100;
+                persistent.putInt(SANITY_KEY, Math.min(100, currentSanity + 2));
+                persistent.putLong("beyondthebag_last_rest_tick", now);
+                player.displayClientMessage(Component.literal("§aТихая комната помогает восстановить рассудок."), true);
+            }
         }
         if (!persistent.contains(SANITY_KEY)) persistent.putInt(SANITY_KEY, 100);
         if (!persistent.contains(LAST_SANITY_TICK_KEY)) persistent.putLong(LAST_SANITY_TICK_KEY, now);
