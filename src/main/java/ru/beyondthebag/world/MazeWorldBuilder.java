@@ -127,7 +127,19 @@ public final class MazeWorldBuilder {
             level.setBlock(new BlockPos(cx - 2, FLOOR_Y + 1, cz), Blocks.REDSTONE_LAMP.defaultBlockState(), 3);
         }
         if (room.type() == MazeLayout.RoomType.BOSS) {
-            level.setBlock(new BlockPos(cx + 2, FLOOR_Y + 1, cz + 2), Blocks.CHEST.defaultBlockState(), 3);
+            // The final chamber contains the expedition's physical return gate.
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    if (Math.abs(dx) == 1 || Math.abs(dz) == 1) {
+                        level.setBlock(new BlockPos(cx + dx, FLOOR_Y + 1, cz + dz),
+                                Blocks.CRYING_OBSIDIAN.defaultBlockState(), 3);
+                    }
+                }
+            }
+            level.setBlock(new BlockPos(cx, FLOOR_Y + 1, cz),
+                    Blocks.RESPAWN_ANCHOR.defaultBlockState(), 3);
+            level.setBlock(new BlockPos(cx + 3, FLOOR_Y + 1, cz + 3),
+                    Blocks.CHEST.defaultBlockState(), 3);
         }
     }
 
