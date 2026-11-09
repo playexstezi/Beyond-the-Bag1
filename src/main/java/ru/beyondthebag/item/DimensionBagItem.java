@@ -77,6 +77,20 @@ public final class DimensionBagItem extends Item {
                 return InteractionResultHolder.sidedSuccess(stack, false);
             }
             boolean fromUnstable = serverLevel.dimension().equals(UNSTABLE_WORLD);
+            if (fromUnstable) {
+                PocketData.Expedition expedition = data.getExpedition(serverPlayer.getUUID()).orElse(null);
+                if (expedition != null) {
+                    long elapsed = Math.max(0L, serverPlayer.server.overworld().getGameTime()
+                            - expedition.startedAt());
+                    if (elapsed < 12_000L) {
+                        long remainingSeconds = (12_000L - elapsed + 19L) / 20L;
+                        serverPlayer.displayClientMessage(Component.literal(
+                                "§5Мешок ещё нестабилен. Аварийный выход откроется через "
+                                        + remainingSeconds + " сек."), true);
+                        return InteractionResultHolder.sidedSuccess(stack, false);
+                    }
+                }
+            }
             serverPlayer.teleportTo(destination, home.x(), home.y(), home.z(),
                     home.yaw(), home.pitch());
             data.clearExpedition(serverPlayer.getUUID());
