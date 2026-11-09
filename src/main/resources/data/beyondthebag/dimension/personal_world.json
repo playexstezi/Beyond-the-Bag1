@@ -1,0 +1,11 @@
+{
+  "type": "beyondthebag:personal_world",
+  "generator": {
+    "type": "minecraft:noise",
+    "settings": "beyondthebag:personal_realm",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "beyondthebag:stone_wastes"
+    }
+  }
+}
