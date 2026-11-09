@@ -1,11 +1,14 @@
 package ru.beyondthebag.item;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -167,8 +170,11 @@ public final class DimensionBagItem extends Item {
     }
 
     private static BlockPos findSpawn(ServerLevel level, int x, int z) {
-        // Generate/load terrain before reading its heightmap.
-        level.getChunkAt(new BlockPos(x, level.getSeaLevel(), z));
+        // Cache chunk loads: the radius search visits many block positions but only
+        // a handful of distinct chunks. Loading the same chunk for every column
+        // caused avoidable server-thread work during dimension entry.
+        Set<Long> loadedChunks = new HashSet<>();
+        loadSpawnChunk(level, x, z, loadedChunks);
 
         for (int radius = 0; radius <= 16; radius++) {
             for (int dx = -radius; dx <= radius; dx++) {
@@ -176,8 +182,9 @@ public final class DimensionBagItem extends Item {
                     if (radius > 0 && Math.abs(dx) != radius && Math.abs(dz) != radius) continue;
                     int candidateX = x + dx;
                     int candidateZ = z + dz;
-                    level.getChunkAt(new BlockPos(candidateX, level.getSeaLevel(), candidateZ));
-                    int surfaceY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, candidateX, candidateZ);
+                    loadSpawnChunk(level, candidateX, candidateZ, loadedChunks);
+                    int surfaceY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                            candidateX, candidateZ);
                     BlockPos feet = new BlockPos(candidateX, surfaceY, candidateZ);
                     BlockPos floor = feet.below();
                     if (level.getBlockState(floor).isFaceSturdy(level, floor, Direction.UP)
@@ -196,6 +203,15 @@ public final class DimensionBagItem extends Item {
         level.setBlock(feet, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
         level.setBlock(feet.above(), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
         return feet;
+    }
+
+    private static void loadSpawnChunk(ServerLevel level, int x, int z, Set<Long> loadedChunks) {
+        int chunkX = x >> 4;
+        int chunkZ = z >> 4;
+        long key = ChunkPos.asLong(chunkX, chunkZ);
+        if (loadedChunks.add(key)) {
+            level.getChunkAt(new BlockPos(x, level.getSeaLevel(), z));
+        }
     }
 
     @Override
