@@ -15,9 +15,9 @@ import ru.beyondthebag.data.PocketData;
 /** Places the deterministic expedition graph as a simple, explorable block maze. */
 public final class MazeWorldBuilder {
     private static final int FLOOR_Y = 72;
-    private static final int SPACING = 16;
-    private static final int ROOM_RADIUS = 4;
-    private static final int WALL_HEIGHT = 5;
+    private static final int SPACING = 24;
+    private static final int ROOM_RADIUS = 6;
+    private static final int WALL_HEIGHT = 6;
 
     private MazeWorldBuilder() {}
 
@@ -60,13 +60,18 @@ public final class MazeWorldBuilder {
 
     private static void buildRoom(ServerLevel level, MazeLayout.Room room,
             int cx, int cz, PocketData.Expedition expedition) {
-        BlockState wall = room.type() == MazeLayout.RoomType.ANOMALY
-                ? Blocks.CRYING_OBSIDIAN.defaultBlockState()
-                : Blocks.DEEPSLATE_BRICKS.defaultBlockState();
+        BlockState wall = switch (room.type()) {
+            case ANOMALY, BOSS -> Blocks.CRYING_OBSIDIAN.defaultBlockState();
+            case SHRINE -> Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
+            default -> Blocks.DEEPSLATE_BRICKS.defaultBlockState();
+        };
         BlockState floor = switch (room.type()) {
             case TREASURE, RARE -> Blocks.POLISHED_DEEPSLATE.defaultBlockState();
             case HAZARD -> Blocks.CRACKED_DEEPSLATE_BRICKS.defaultBlockState();
-            case ANOMALY -> Blocks.BLACKSTONE.defaultBlockState();
+            case ANOMALY, BOSS -> Blocks.BLACKSTONE.defaultBlockState();
+            case REST -> Blocks.MOSS_BLOCK.defaultBlockState();
+            case SHRINE -> Blocks.POLISHED_BLACKSTONE.defaultBlockState();
+            case PUZZLE -> Blocks.CUT_COPPER.defaultBlockState();
             default -> Blocks.DEEPSLATE_TILES.defaultBlockState();
         };
 
@@ -105,9 +110,24 @@ public final class MazeWorldBuilder {
             level.setBlock(new BlockPos(cx, FLOOR_Y + 1, cz),
                     Blocks.MAGMA_BLOCK.defaultBlockState(), 3);
         }
-        if (room.type() == MazeLayout.RoomType.ANOMALY) {
+        if (room.type() == MazeLayout.RoomType.ANOMALY || room.type() == MazeLayout.RoomType.BOSS) {
             level.setBlock(new BlockPos(cx, FLOOR_Y + 1, cz),
                     Blocks.SOUL_FIRE.defaultBlockState(), 3);
+        }
+        if (room.type() == MazeLayout.RoomType.REST) {
+            level.setBlock(new BlockPos(cx, FLOOR_Y + 1, cz), Blocks.CAMPFIRE.defaultBlockState(), 3);
+            level.setBlock(new BlockPos(cx + 2, FLOOR_Y + 1, cz), Blocks.LANTERN.defaultBlockState(), 3);
+        }
+        if (room.type() == MazeLayout.RoomType.SHRINE) {
+            level.setBlock(new BlockPos(cx, FLOOR_Y + 1, cz), Blocks.RESPAWN_ANCHOR.defaultBlockState(), 3);
+            level.setBlock(new BlockPos(cx + 2, FLOOR_Y + 1, cz), Blocks.SOUL_LANTERN.defaultBlockState(), 3);
+        }
+        if (room.type() == MazeLayout.RoomType.PUZZLE) {
+            level.setBlock(new BlockPos(cx, FLOOR_Y + 1, cz), Blocks.LODESTONE.defaultBlockState(), 3);
+            level.setBlock(new BlockPos(cx - 2, FLOOR_Y + 1, cz), Blocks.COPPER_BULB.defaultBlockState(), 3);
+        }
+        if (room.type() == MazeLayout.RoomType.BOSS) {
+            level.setBlock(new BlockPos(cx + 2, FLOOR_Y + 1, cz + 2), Blocks.CHEST.defaultBlockState(), 3);
         }
     }
 
