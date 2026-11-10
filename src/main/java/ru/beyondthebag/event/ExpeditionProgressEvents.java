@@ -20,6 +20,7 @@ public final class ExpeditionProgressEvents {
     private static final String SANITY_KEY = "beyondthebag_sanity";
     private static final String LAST_SANITY_TICK_KEY = "beyondthebag_last_sanity_tick";
     private static final String LAST_DARKNESS_TICK_KEY = "beyondthebag_last_darkness_tick";
+    private static final long REST_SCAN_INTERVAL_TICKS = 100L;
 
     private ExpeditionProgressEvents() {}
 
@@ -46,19 +47,21 @@ public final class ExpeditionProgressEvents {
         }
 
         var persistent = player.getPersistentData();
-        // Moss-and-campfire rest chambers slowly restore composure while the explorer stays nearby.
+        if (!persistent.contains(SANITY_KEY)) persistent.putInt(SANITY_KEY, 100);
+
+        // Rest rooms only need to be checked once every five seconds. Avoid scanning
+        // nearby blocks at full player-tick frequency, especially on multiplayer servers.
+        int currentSanity = persistent.getInt(SANITY_KEY);
         long lastRestScan = persistent.getLong("beyondthebag_last_rest_scan_tick");
-        if (now - lastRestScan >= 20L) {
+        if (currentSanity < 100 && now - lastRestScan >= REST_SCAN_INTERVAL_TICKS) {
             persistent.putLong("beyondthebag_last_rest_scan_tick", now);
             long lastRest = persistent.getLong("beyondthebag_last_rest_tick");
-            if (now - lastRest >= 100L && isNearRestChamber(player)) {
-                int currentSanity = persistent.contains(SANITY_KEY) ? persistent.getInt(SANITY_KEY) : 100;
+            if (now - lastRest >= REST_SCAN_INTERVAL_TICKS && isNearRestChamber(player)) {
                 persistent.putInt(SANITY_KEY, Math.min(100, currentSanity + 2));
                 persistent.putLong("beyondthebag_last_rest_tick", now);
                 player.displayClientMessage(Component.literal("§aТихая комната помогает восстановить рассудок."), true);
             }
         }
-        if (!persistent.contains(SANITY_KEY)) persistent.putInt(SANITY_KEY, 100);
         if (!persistent.contains(LAST_SANITY_TICK_KEY)) persistent.putLong(LAST_SANITY_TICK_KEY, now);
         long lastTick = persistent.getLong(LAST_SANITY_TICK_KEY);
         if (now - lastTick < 1_200L) return;
