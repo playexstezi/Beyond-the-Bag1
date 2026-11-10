@@ -121,8 +121,9 @@ public final class DimensionBagItem extends Item {
             return InteractionResultHolder.sidedSuccess(stack, false);
         }
 
-        // 95% chance to enter the personal realm, 5% chance to enter instability.
-        boolean unstableRoute = false; // Temporarily disable random instability entry (0% chance).
+        // The unstable expedition is rare, but can now occur on a normal bag use.
+        // Keep the roll server-side so every player receives one authoritative route.
+        boolean unstableRoute = ThreadLocalRandom.current().nextFloat() < 0.10F;
         ResourceKey<Level> targetKey = unstableRoute ? UNSTABLE_WORLD : PERSONAL_WORLD;
         ServerLevel destination = serverPlayer.server.getLevel(targetKey);
         if (destination == null) {
