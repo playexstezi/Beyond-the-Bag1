@@ -372,8 +372,6 @@ public final class MimicEntity extends PathfinderMob {
         super.readAdditionalSaveData(tag);
         if (tag.hasUUID("BeyondTheBagCopiedPlayer")) {
             entityData.set(COPIED_PLAYER, tag.getUUID("BeyondTheBagCopiedPlayer").toString());
-            setCustomName(Component.literal("..."));
-            setCustomNameVisible(true);
         }
         stalkTicks = Math.max(0, tag.getInt("BeyondTheBagStalkTicks"));
         // Never restore delayed block edits from NBT: their world context may have
