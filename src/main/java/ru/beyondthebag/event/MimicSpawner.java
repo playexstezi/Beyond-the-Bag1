@@ -11,6 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import ru.beyondthebag.BeyondTheBag;
@@ -31,6 +32,13 @@ public final class MimicSpawner {
     private static final long EXPEDITION_INTERVAL = 2_400L; // 2 minutes between rolls
 
     private MimicSpawner() {}
+
+    @SubscribeEvent
+    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        UUID playerId = event.getEntity().getUUID();
+        NEXT_OVERWORLD_ATTEMPT.remove(playerId);
+        NEXT_EXPEDITION_ATTEMPT.remove(playerId);
+    }
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {

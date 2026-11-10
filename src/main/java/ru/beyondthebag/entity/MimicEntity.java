@@ -334,27 +334,40 @@ public final class MimicEntity extends PathfinderMob {
 
     private void performCopiedBlockAction(ServerLevel server) {
         if (copiedActions.isEmpty()) return;
-        CopiedBlockAction action = copiedActions.removeFirst();
-        if (action.delay() > 0) {
-            copiedActions.addLast(new CopiedBlockAction(action.relativePos(), action.state(),
-                    action.place(), action.delay() - 1));
-            return;
+
+        // Advance every queued imitation on every tick. Previously only the
+        // head item lost one tick, so a full queue multiplied every delay.
+        CopiedBlockAction ready = null;
+        int queuedAtStart = copiedActions.size();
+        for (int i = 0; i < queuedAtStart; i++) {
+            CopiedBlockAction action = copiedActions.removeFirst();
+            if (action.delay() > 0) {
+                copiedActions.addLast(new CopiedBlockAction(action.relativePos(), action.state(),
+                        action.place(), action.delay() - 1));
+            } else if (ready == null) {
+                ready = action;
+            } else {
+                copiedActions.addLast(action);
+            }
         }
+
+        if (ready == null) return;
         if (blockActionCooldown > 0) {
-            copiedActions.addFirst(action);
+            copiedActions.addFirst(ready);
             return;
         }
+
         blockActionCooldown = 12 + random.nextInt(13);
-        BlockPos destination = blockPosition().offset(action.relativePos());
-        if (Math.abs(action.relativePos().getX()) > 4 || Math.abs(action.relativePos().getY()) > 3
-                || Math.abs(action.relativePos().getZ()) > 4 || !server.hasChunkAt(destination)) return;
+        BlockPos destination = blockPosition().offset(ready.relativePos());
+        if (Math.abs(ready.relativePos().getX()) > 4 || Math.abs(ready.relativePos().getY()) > 3
+                || Math.abs(ready.relativePos().getZ()) > 4 || !server.hasChunkAt(destination)) return;
         BlockState current = server.getBlockState(destination);
-        if (action.place()) {
+        if (ready.place()) {
             if (current.canBeReplaced() && server.getFluidState(destination).isEmpty()
-                    && !action.state().hasBlockEntity() && action.state().canSurvive(server, destination)
-                    && server.setBlock(destination, action.state(), 3)) animateAction(3);
+                    && !ready.state().hasBlockEntity() && ready.state().canSurvive(server, destination)
+                    && server.setBlock(destination, ready.state(), 3)) animateAction(3);
         } else if (!current.isAir() && !current.hasBlockEntity()
-                && current.is(action.state().getBlock())) {
+                && current.is(ready.state().getBlock())) {
             // No drops: the mimic must not duplicate the player's mined resources.
             if (server.destroyBlock(destination, false, this)) animateAction(2);
         }
