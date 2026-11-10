@@ -79,7 +79,6 @@ public final class MazeLayout {
 
             parent.links.add(child.id);
             child.links.add(parent.id);
-            parent.secretLinks.remove(Integer.valueOf(-1)); // Keep frontier state independent of secret links.
             rooms.add(child);
             frontier.add(child);
         }
