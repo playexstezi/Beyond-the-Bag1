@@ -5,6 +5,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -357,5 +358,26 @@ public final class MimicEntity extends PathfinderMob {
             // No drops: the mimic must not duplicate the player's mined resources.
             if (server.destroyBlock(destination, false, this)) animateAction(2);
         }
+    }
+    @Override
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        UUID copiedPlayer = getCopiedPlayerId();
+        if (copiedPlayer != null) tag.putUUID("BeyondTheBagCopiedPlayer", copiedPlayer);
+        tag.putInt("BeyondTheBagStalkTicks", Math.max(0, stalkTicks));
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        if (tag.hasUUID("BeyondTheBagCopiedPlayer")) {
+            entityData.set(COPIED_PLAYER, tag.getUUID("BeyondTheBagCopiedPlayer").toString());
+            setCustomName(Component.literal("..."));
+            setCustomNameVisible(true);
+        }
+        stalkTicks = Math.max(0, tag.getInt("BeyondTheBagStalkTicks"));
+        // Never restore delayed block edits from NBT: their world context may have
+        // changed while the server was offline.
+        copiedActions.clear();
     }
 }
