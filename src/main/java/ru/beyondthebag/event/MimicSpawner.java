@@ -102,9 +102,6 @@ public final class MimicSpawner {
                     || !level.getBlockState(surface.above()).isAir()
                     || !level.getBlockState(surface.below()).isSolid()) continue;
 
-            // Keep the encounter outside the player's immediate view where possible.
-            if (player.hasLineOfSight(net.minecraft.world.phys.Vec3.atCenterOf(surface))) continue;
-
             MimicEntity mimic = ModEntities.MIMIC.get().create(level);
             if (mimic == null) return;
             mimic.moveTo(surface.getX() + 0.5D, surface.getY(), surface.getZ() + 0.5D,
