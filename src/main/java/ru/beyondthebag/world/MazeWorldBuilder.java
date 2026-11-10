@@ -51,7 +51,7 @@ public final class MazeWorldBuilder {
                         originZ + room.z() * SPACING,
                         originX + target.x() * SPACING,
                         originZ + target.z() * SPACING,
-                        room.secret() || target.secret());
+                        room.isSecretConnection(targetId));
             }
         }
         // Keep the entry clear and recognizable.
