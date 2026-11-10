@@ -10,6 +10,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import ru.beyondthebag.entity.GuardianEntity;
 import ru.beyondthebag.registry.ModEntities;
 import ru.beyondthebag.data.PocketData;
@@ -135,14 +136,8 @@ public final class MazeWorldBuilder {
             if (level.getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
                 List<ExpeditionLoot.Stack> loot = ExpeditionLoot.generate(
                         expedition.seed(), room.id(), expedition.instability());
-                int slot = 0;
-                for (ExpeditionLoot.Stack stack : loot) {
-                    var item = BuiltInRegistries.ITEM.get(new ResourceLocation(stack.itemId()));
-                    if (item != net.minecraft.world.item.Items.AIR) {
-                        chest.setItem(slot++, new ItemStack(item, stack.count()));
-                    }
-                }
-                chest.setChanged();
+                fillChest(chest, loot);
+
             }
         }
         if (room.type() == MazeLayout.RoomType.HAZARD) {
@@ -182,26 +177,44 @@ public final class MazeWorldBuilder {
             if (level.getBlockEntity(rewardPos) instanceof ChestBlockEntity chest) {
                 List<ExpeditionLoot.Stack> loot = ExpeditionLoot.generate(
                         expedition.seed() ^ 0xB055L, room.id(), Math.min(4, expedition.instability() + 1));
-                int slot = 0;
-                for (ExpeditionLoot.Stack stack : loot) {
-                    var item = BuiltInRegistries.ITEM.get(new ResourceLocation(stack.itemId()));
-                    if (item != net.minecraft.world.item.Items.AIR) {
-                        chest.setItem(slot++, new ItemStack(item, stack.count()));
-                    }
-                }
+                fillChest(chest, loot);
                 chest.setItem(26, new ItemStack(net.minecraft.world.item.Items.NETHER_STAR));
                 chest.setChanged();
             }
 
             // Spawn the chamber guardian once, as part of the deterministic maze build.
-            GuardianEntity guardian = ModEntities.GUARDIAN.get().create(level);
-            if (guardian != null) {
-                guardian.setExpeditionBoss(true);
-                guardian.moveTo(cx + 4.5D, FLOOR_Y + 1, cz + 0.5D, 180.0F, 0.0F);
-                guardian.setPersistenceRequired();
-                level.addFreshEntity(guardian);
+            boolean guardianAlreadyPresent = !level.getEntitiesOfClass(GuardianEntity.class,
+                    new AABB(cx - 8, FLOOR_Y - 2, cz - 8,
+                            cx + 8, FLOOR_Y + WALL_HEIGHT + 4, cz + 8),
+                    GuardianEntity::isExpeditionBoss).isEmpty();
+            if (!guardianAlreadyPresent) {
+                GuardianEntity guardian = ModEntities.GUARDIAN.get().create(level);
+                if (guardian != null) {
+                    guardian.setExpeditionBoss(true);
+                    guardian.moveTo(cx + 4.5D, FLOOR_Y + 1, cz + 0.5D, 180.0F, 0.0F);
+                    guardian.setPersistenceRequired();
+                    level.addFreshEntity(guardian);
+                }
             }
         }
+    }
+
+    /**
+     * Rebuilds a generated container from its deterministic loot roll.
+     * Clearing first makes retries after an interrupted world build idempotent
+     * instead of leaving stale items in slots from a previous attempt.
+     */
+    private static void fillChest(ChestBlockEntity chest, List<ExpeditionLoot.Stack> loot) {
+        chest.clearContent();
+        int slot = 0;
+        for (ExpeditionLoot.Stack stack : loot) {
+            if (slot >= chest.getContainerSize()) break;
+            var item = BuiltInRegistries.ITEM.get(new ResourceLocation(stack.itemId()));
+            if (item != net.minecraft.world.item.Items.AIR) {
+                chest.setItem(slot++, new ItemStack(item, stack.count()));
+            }
+        }
+        chest.setChanged();
     }
 
     private static void carvePassage(ServerLevel level, int x1, int z1,
