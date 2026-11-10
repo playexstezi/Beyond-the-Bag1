@@ -2,7 +2,9 @@ package ru.beyondthebag.world;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Random;
 
 /**
@@ -49,9 +51,11 @@ public final class MazeLayout {
         int target = 42 + random.nextInt(13) + instability * 7;
         List<MutableRoom> rooms = new ArrayList<>();
         List<MutableRoom> frontier = new ArrayList<>();
+        Set<Long> occupied = new HashSet<>();
         MutableRoom entry = new MutableRoom(0, 0, 0, RoomType.ENTRY);
         rooms.add(entry);
         frontier.add(entry);
+        occupied.add(positionKey(entry.x, entry.z));
 
         int[][] directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
         while (rooms.size() < target) {
@@ -65,7 +69,7 @@ public final class MazeLayout {
             for (int[] direction : candidates) {
                 int nx = parent.x + direction[0];
                 int nz = parent.z + direction[1];
-                if (findAt(rooms, nx, nz) == null) {
+                if (!occupied.contains(positionKey(nx, nz))) {
                     child = new MutableRoom(rooms.size(), nx, nz,
                             chooseType(random, rooms.size(), target, instability));
                     break;
@@ -81,6 +85,7 @@ public final class MazeLayout {
             child.links.add(parent.id);
             rooms.add(child);
             frontier.add(child);
+            occupied.add(positionKey(child.x, child.z));
         }
 
         // A small number of short optional loops creates shortcuts without producing
@@ -122,11 +127,8 @@ public final class MazeLayout {
         return RoomType.CHAMBER;
     }
 
-    private static MutableRoom findAt(List<MutableRoom> rooms, int x, int z) {
-        for (MutableRoom room : rooms) {
-            if (room.x == x && room.z == z) return room;
-        }
-        return null;
+    private static long positionKey(int x, int z) {
+        return ((long) x << 32) ^ (z & 0xffffffffL);
     }
 
     private static int manhattan(MutableRoom a, MutableRoom b) {
