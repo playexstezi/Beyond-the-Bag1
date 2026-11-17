@@ -38,6 +38,8 @@ public final class MimicFormEvents {
     private static final String DAMAGE_KEY = "beyondthebag_mimic_damage";
     private static final String FORMS_KEY = "beyondthebag_mimic_saved_forms";
     private static final String FORM_INDEX_KEY = "beyondthebag_mimic_form_index";
+    private static final String TRANSFORM_START_KEY = "beyondthebag_mimic_transform_start";
+    private static final String TRANSFORM_STAGE_KEY = "beyondthebag_mimic_transform_stage";
     private MimicFormEvents() {}
 
     private static boolean hasFullSet(Player player) {
@@ -163,6 +165,9 @@ public final class MimicFormEvents {
         }
 
         String name = data.getString(NAME_KEY);
+        // A short, synchronized sound sequence sells the painful magical change.
+        data.putLong(TRANSFORM_START_KEY, now);
+        data.putInt(TRANSFORM_STAGE_KEY, 0);
         switch (form) {
             case "minecraft:spider", "minecraft:cave_spider" -> {
                 player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 120, 1));
@@ -309,9 +314,12 @@ public final class MimicFormEvents {
 
     @SubscribeEvent
     public static void onFormTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || event.player.level().isClientSide
-                || event.player.tickCount % 40 != 0 || !hasFullSet(event.player)) return;
+        if (event.phase != TickEvent.Phase.END || event.player.level().isClientSide) return;
         Player player = event.player;
+        if (player instanceof ServerPlayer serverPlayer) {
+            tickTransformationSounds(serverPlayer);
+        }
+        if (player.tickCount % 40 != 0 || !hasFullSet(player)) return;
         String form = player.getPersistentData().getString(FORM_KEY);
         switch (form) {
             case "minecraft:spider", "minecraft:cave_spider" ->
@@ -325,6 +333,57 @@ public final class MimicFormEvents {
             case "minecraft:skeleton", "minecraft:stray", "minecraft:bogged" ->
                     player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 80, 0, true, false));
             default -> applyAdaptivePassive(player, player.getPersistentData());
+        }
+    }
+
+    /**
+     * Broadcasts a staged transformation sequence to nearby players.
+     * The hurt grunts are deliberately spaced out and followed by magical
+     * resonance, so it feels like a painful metamorphosis rather than one click.
+     */
+    private static void tickTransformationSounds(ServerPlayer player) {
+        CompoundTag data = player.getPersistentData();
+        long startedAt = data.getLong(TRANSFORM_START_KEY);
+        if (startedAt <= 0L) return;
+
+        long elapsed = player.level().getGameTime() - startedAt;
+        int stage = data.getInt(TRANSFORM_STAGE_KEY);
+        SoundEvent sound = null;
+        float volume = 0.85F;
+        float pitch = 1.0F;
+
+        if (stage == 0 && elapsed >= 0L) {
+            sound = SoundEvents.PLAYER_HURT;
+            pitch = 0.78F;
+        } else if (stage == 1 && elapsed >= 7L) {
+            sound = SoundEvents.PLAYER_HURT;
+            volume = 0.72F;
+            pitch = 0.62F;
+        } else if (stage == 2 && elapsed >= 15L) {
+            sound = SoundEvents.ZOMBIE_VILLAGER_CURE;
+            volume = 0.9F;
+            pitch = 0.72F;
+        } else if (stage == 3 && elapsed >= 25L) {
+            sound = SoundEvents.ENDERMAN_TELEPORT;
+            volume = 0.8F;
+            pitch = 0.78F;
+        } else if (stage == 4 && elapsed >= 38L) {
+            sound = SoundEvents.PLAYER_LEVELUP;
+            volume = 0.7F;
+            pitch = 0.9F;
+        }
+
+        if (sound != null) {
+            player.level().playSound(null, player.blockPosition(), sound,
+                    SoundSource.PLAYERS, volume, pitch);
+            data.putInt(TRANSFORM_STAGE_KEY, stage + 1);
+            if (stage == 4) {
+                data.remove(TRANSFORM_START_KEY);
+                data.remove(TRANSFORM_STAGE_KEY);
+            }
+        } else if (elapsed > 80L) {
+            data.remove(TRANSFORM_START_KEY);
+            data.remove(TRANSFORM_STAGE_KEY);
         }
     }
 
