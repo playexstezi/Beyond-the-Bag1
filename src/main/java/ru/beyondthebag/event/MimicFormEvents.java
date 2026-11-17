@@ -319,6 +319,25 @@ public final class MimicFormEvents {
         }
     }
 
+
+    @SubscribeEvent
+    public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer joining)) return;
+        for (ServerPlayer online : joining.server.getPlayerList().getPlayers()) {
+            CompoundTag data = online.getPersistentData();
+            if (data.getBoolean(DISGUISE_ACTIVE_KEY) && hasFullSet(online)) {
+                MimicNetwork.broadcastForm(online.getUUID(), data.getString(FORM_KEY), true);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof ServerPlayer leaving) {
+            MimicNetwork.broadcastForm(leaving.getUUID(), "", false);
+        }
+    }
+
     @SubscribeEvent
     public static void onFormTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END || event.player.level().isClientSide) return;
