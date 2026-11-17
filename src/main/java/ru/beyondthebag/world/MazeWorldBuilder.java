@@ -18,10 +18,10 @@ import ru.beyondthebag.data.PocketData;
 /** Places the deterministic expedition graph as a simple, explorable block maze. */
 public final class MazeWorldBuilder {
     private static final int FLOOR_Y = 72;
-    private static final int SPACING = 28;
-    private static final int ROOM_RADIUS = 6;
-    private static final int WALL_HEIGHT = 6;
-    private static final int TERRITORY_HEIGHT = 18;
+    private static final int SPACING = 36;
+    private static final int ROOM_RADIUS = 8;
+    private static final int WALL_HEIGHT = 8;
+    private static final int TERRITORY_HEIGHT = 24;
 
     private MazeWorldBuilder() {}
 
@@ -70,20 +70,24 @@ public final class MazeWorldBuilder {
         for (MazeLayout.Room room : layout.rooms()) {
             int x = originX + room.x() * SPACING;
             int z = originZ + room.z() * SPACING;
-            minX = Math.min(minX, x - ROOM_RADIUS - 2);
-            maxX = Math.max(maxX, x + ROOM_RADIUS + 2);
-            minZ = Math.min(minZ, z - ROOM_RADIUS - 2);
-            maxZ = Math.max(maxZ, z + ROOM_RADIUS + 2);
+            minX = Math.min(minX, x - ROOM_RADIUS - 4);
+            maxX = Math.max(maxX, x + ROOM_RADIUS + 4);
+            minZ = Math.min(minZ, z - ROOM_RADIUS - 4);
+            maxZ = Math.max(maxZ, z + ROOM_RADIUS + 4);
         }
         BlockState boundary = Blocks.BEDROCK.defaultBlockState();
         for (int y = FLOOR_Y + 1; y < FLOOR_Y + TERRITORY_HEIGHT; y++) {
             for (int x = minX; x <= maxX; x++) {
                 setBlockIfChanged(level, new BlockPos(x, y, minZ), boundary, 3);
+                setBlockIfChanged(level, new BlockPos(x, y, minZ + 1), boundary, 3);
                 setBlockIfChanged(level, new BlockPos(x, y, maxZ), boundary, 3);
+                setBlockIfChanged(level, new BlockPos(x, y, maxZ - 1), boundary, 3);
             }
             for (int z = minZ; z <= maxZ; z++) {
                 setBlockIfChanged(level, new BlockPos(minX, y, z), boundary, 3);
+                setBlockIfChanged(level, new BlockPos(minX + 1, y, z), boundary, 3);
                 setBlockIfChanged(level, new BlockPos(maxX, y, z), boundary, 3);
+                setBlockIfChanged(level, new BlockPos(maxX - 1, y, z), boundary, 3);
             }
         }
         // A continuous roof and bedrock underside close the expedition volume.
