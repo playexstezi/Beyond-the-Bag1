@@ -235,6 +235,78 @@ public final class MimicFormEvents {
      * Универсальная способность для любых зарегистрированных Forge-сущностей.
      * Сохраняем ID существа и его характеристики, поэтому поддерживаются и модовые формы.
      */
+    private static final String ABILITY_COOLDOWN_KEY = "beyondthebag_mimic_ability_ready";
+
+    /** Server-authoritative active ability triggered by the configurable client key. */
+    public static void useBoundAbility(ServerPlayer player) {
+        CompoundTag data = player.getPersistentData();
+        String form = data.getString(FORM_KEY);
+        if (form.isEmpty() || !data.getBoolean(DISGUISE_ACTIVE_KEY) || !hasFullSet(player)) {
+            player.displayClientMessage(Component.literal("§cСначала активируй форму мимика."), true);
+            return;
+        }
+        long now = player.level().getGameTime();
+        long ready = data.getLong(ABILITY_COOLDOWN_KEY);
+        if (now < ready) {
+            player.displayClientMessage(Component.literal("§7Способность перезаряжается: "
+                    + ((ready - now + 19) / 20) + " сек."), true);
+            return;
+        }
+        ServerLevel level = (ServerLevel) player.level();
+        switch (form) {
+            case "minecraft:spider", "minecraft:cave_spider" -> {
+                Vec3 motion = player.getDeltaMovement();
+                player.setDeltaMovement(motion.x, Math.max(0.65D, motion.y + 0.75D), motion.z);
+                player.hurtMarked = true;
+                player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 100, 1));
+                player.displayClientMessage(Component.literal("§dПаучий прыжок!"), true);
+            }
+            case "minecraft:enderman" -> {
+                Vec3 look = player.getLookAngle().normalize();
+                boolean moved = false;
+                for (int distance = 12; distance >= 3; distance--) {
+                    Vec3 pos = player.position().add(look.scale(distance));
+                    if (player.randomTeleport(pos.x, pos.y, pos.z, true)) { moved = true; break; }
+                }
+                if (!moved) {
+                    player.displayClientMessage(Component.literal("§cНет безопасного места для телепортации."), true);
+                    return;
+                }
+                level.playSound(null, player.blockPosition(), SoundEvents.ENDERMAN_TELEPORT,
+                        SoundSource.PLAYERS, 0.8F, 1.0F);
+            }
+            case "minecraft:creeper" -> {
+                for (Monster target : level.getEntitiesOfClass(Monster.class,
+                        player.getBoundingBox().inflate(4.5D), e -> e.isAlive())) {
+                    target.hurt(level.damageSources().playerAttack(player), 5.0F);
+                    target.knockback(0.9D, player.getX() - target.getX(), player.getZ() - target.getZ());
+                }
+                level.sendParticles(ParticleTypes.EXPLOSION, player.getX(), player.getY() + 0.5D,
+                        player.getZ(), 1, 0, 0, 0, 0);
+                level.playSound(null, player.blockPosition(), SoundEvents.GENERIC_EXPLODE,
+                        SoundSource.PLAYERS, 0.65F, 1.35F);
+            }
+            case "minecraft:zombie", "minecraft:husk", "minecraft:drowned" -> {
+                player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 160, 1));
+                player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 160, 0));
+                player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 0));
+            }
+            case "minecraft:skeleton", "minecraft:stray", "minecraft:bogged" -> {
+                player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 160, 1));
+                player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 120, 0));
+            }
+            case "minecraft:phantom" -> {
+                player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 240, 0));
+                player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 160, 1));
+            }
+            default -> {
+                applyAdaptiveForm(player, data);
+                player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 80, 0));
+            }
+        }
+        data.putLong(ABILITY_COOLDOWN_KEY, now + 20L * 12L);
+    }
+
     private static void applyAdaptiveForm(ServerPlayer player, net.minecraft.nbt.CompoundTag data) {
         String mobType = data.getString(MOB_TYPE_KEY);
         float speed = data.getFloat(SPEED_KEY);
