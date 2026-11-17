@@ -81,7 +81,11 @@ public final class MimicSoulbladeEvents {
         playerData.putLong(RETURN_AT, player.level().getGameTime() + 20L * 30L);
         playerData.putString("beyondthebag_mimic_form", id);
         playerData.putString("beyondthebag_mimic_form_name", victim.getType().getDescription().getString());
-        playerData.putString("beyondthebag_mimic_mob_type", victim.getMobType().name());
+        String mobType = victim instanceof net.minecraft.world.entity.monster.AbstractIllager ? "ILLAGER"
+                : victim.getMobType() == net.minecraft.world.entity.MobType.ARTHROPOD ? "ARTHROPOD"
+                : victim.getMobType() == net.minecraft.world.entity.MobType.UNDEAD ? "UNDEAD"
+                : victim.getMobType() == net.minecraft.world.entity.MobType.WATER ? "WATER" : "OTHER";
+        playerData.putString("beyondthebag_mimic_mob_type", mobType);
         var speed = victim.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
         var damage = victim.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE);
         playerData.putFloat("beyondthebag_mimic_speed", speed == null ? 0.0F : (float) speed.getValue());
