@@ -382,8 +382,14 @@ public final class MimicFormEvents {
         if (event.isWasDeath()) {
             CompoundTag oldData = event.getOriginal().getPersistentData();
             CompoundTag newData = event.getEntity().getPersistentData();
+            // Preserve the soulblade timer and previous form across death respawn.
+            String soulPrefix = "beyondthebag_soul_previous_";
             String[] keys = { FORM_KEY, NAME_KEY, COOLDOWN_KEY, MOB_TYPE_KEY, DISGUISE_ACTIVE_KEY,
-                    SPEED_KEY, HEALTH_KEY, DAMAGE_KEY, FORMS_KEY, FORM_INDEX_KEY };
+                    SPEED_KEY, HEALTH_KEY, DAMAGE_KEY, FORMS_KEY, FORM_INDEX_KEY,
+                    "beyondthebag_soul_form_return",
+                    soulPrefix + FORM_KEY, soulPrefix + NAME_KEY, soulPrefix + MOB_TYPE_KEY,
+                    soulPrefix + SPEED_KEY, soulPrefix + HEALTH_KEY, soulPrefix + DAMAGE_KEY,
+                    soulPrefix + DISGUISE_ACTIVE_KEY };
             for (String key : keys) {
                 if (oldData.contains(key)) newData.put(key, oldData.get(key).copy());
             }
