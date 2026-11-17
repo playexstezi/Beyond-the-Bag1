@@ -7,7 +7,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.event.TickEvent;
@@ -17,51 +21,58 @@ import net.minecraftforge.registries.ForgeRegistries;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 /**
- * Client-only disguise renderer. Cached entity copies are ticked normally so
- * species-specific limb/head animation state can advance between rendered frames.
+ * Client-only disguise renderer. A render-only copy of the selected living
+ * entity is kept per player. The copy receives the player's pose and equipment
+ * while retaining its own renderer/model, so vanilla species animations run.
  */
 @Mod.EventBusSubscriber(modid = "beyondthebag", value = Dist.CLIENT)
 public final class MimicDisguiseRenderer {
     private static final Map<UUID, String> ACTIVE_FORMS = new ConcurrentHashMap<>();
     private static final Map<UUID, LivingEntity> RENDER_ENTITIES = new ConcurrentHashMap<>();
+    private static net.minecraft.client.multiplayer.ClientLevel cachedLevel;
+
     private MimicDisguiseRenderer() {}
 
     public static void setForm(UUID playerId, String formId, boolean active) {
         if (active && formId != null && !formId.isBlank()) {
             ACTIVE_FORMS.put(playerId, formId);
-            RENDER_ENTITIES.remove(playerId);
         } else {
             ACTIVE_FORMS.remove(playerId);
-            RENDER_ENTITIES.remove(playerId);
         }
+        RENDER_ENTITIES.remove(playerId);
     }
 
     @SubscribeEvent
     public static void onLogout(net.minecraftforge.client.event.ClientPlayerNetworkEvent.LoggingOut event) {
         ACTIVE_FORMS.clear();
         RENDER_ENTITIES.clear();
+        cachedLevel = null;
     }
 
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getInstance();
-        if (mc.level == null) {
+        if (mc.level != cachedLevel) {
             RENDER_ENTITIES.clear();
-            return;
+            cachedLevel = mc.level;
         }
+        if (mc.level == null) return;
+
         RENDER_ENTITIES.keySet().removeIf(id -> mc.level.getPlayerByUUID(id) == null
                 || !ACTIVE_FORMS.containsKey(id));
         for (Map.Entry<UUID, String> entry : ACTIVE_FORMS.entrySet()) {
-            var player = mc.level.getPlayerByUUID(entry.getKey());
+            Player player = mc.level.getPlayerByUUID(entry.getKey());
             if (player == null) continue;
             LivingEntity disguise = getOrCreate(entry.getKey(), entry.getValue());
             if (disguise == null) continue;
-            syncPose(disguise, player);
-            // Tick the render-only copy once per client tick. This advances
-            // wolf tails/legs, villager head/arms and other vanilla model states.
+
+            // Copy before and after ticking: tick() advances species-specific
+            // animation state, while the second sync prevents its AI/physics
+            // from drifting away from the real player's position.
+            syncFromPlayer(disguise, player);
             disguise.tick();
-            syncPose(disguise, player);
+            syncFromPlayer(disguise, player);
         }
     }
 
@@ -70,18 +81,22 @@ public final class MimicDisguiseRenderer {
         if (cached != null) return cached;
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) return null;
+
         ResourceLocation key = ResourceLocation.tryParse(id);
         if (key == null) return null;
         var type = ForgeRegistries.ENTITY_TYPES.getValue(key);
         if (type == null) return null;
         Entity raw = type.create(mc.level);
         if (!(raw instanceof LivingEntity disguise)) return null;
-        if (disguise instanceof net.minecraft.world.entity.Mob mob) mob.setNoAi(true);
+        if (disguise instanceof Mob mob) {
+            mob.setNoAi(true);
+            mob.setPersistenceRequired();
+        }
         RENDER_ENTITIES.put(playerId, disguise);
         return disguise;
     }
 
-    private static void syncPose(LivingEntity disguise, LivingEntity player) {
+    private static void syncFromPlayer(LivingEntity disguise, Player player) {
         disguise.setPos(player.getX(), player.getY(), player.getZ());
         disguise.setYRot(player.getYRot());
         disguise.setXRot(player.getXRot());
@@ -91,7 +106,6 @@ public final class MimicDisguiseRenderer {
         disguise.xRotO = player.xRotO;
         disguise.yBodyRotO = player.yBodyRotO;
         disguise.yHeadRotO = player.yHeadRotO;
-        disguise.tickCount = player.tickCount;
         disguise.setDeltaMovement(player.getDeltaMovement());
         disguise.setOnGround(player.onGround());
         disguise.setSprinting(player.isSprinting());
@@ -99,20 +113,33 @@ public final class MimicDisguiseRenderer {
         disguise.setSwimming(player.isSwimming());
         disguise.setPose(player.getPose());
         disguise.walkAnimation.update(player.walkAnimation.position(), player.walkAnimation.speed());
+
+        // Equipment is copied, never moved. This keeps armour, elytra, shields
+        // and held items visible on the disguised model without risking stacks.
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            ItemStack source = player.getItemBySlot(slot);
+            ItemStack current = disguise.getItemBySlot(slot);
+            if (!ItemStack.matches(source, current)) {
+                disguise.setItemSlot(slot, source.copy());
+            }
+        }
     }
 
     @SubscribeEvent
     public static void renderDisguise(RenderPlayerEvent.Pre event) {
-        UUID id = event.getEntity().getUUID();
+        Player player = event.getEntity();
+        UUID id = player.getUUID();
         String form = ACTIVE_FORMS.get(id);
         if (form == null || form.equals("minecraft:player")) return;
+
         LivingEntity disguise = getOrCreate(id, form);
         if (disguise == null) return;
-        syncPose(disguise, event.getEntity());
+        syncFromPlayer(disguise, player);
+
         PoseStack pose = event.getPoseStack();
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         event.setCanceled(true);
-        dispatcher.render(disguise, 0.0D, 0.0D, 0.0D, event.getEntity().getYRot(),
+        dispatcher.render(disguise, 0.0D, 0.0D, 0.0D, player.getYRot(),
                 event.getPartialTick(), pose, event.getMultiBufferSource(), event.getPackedLight());
     }
 }
