@@ -70,6 +70,13 @@ public final class MimicDisguiseRenderer {
             // from drifting away from the real player's position.
             syncFromPlayer(disguise, player);
             disguise.tick();
+            // WalkAnimationState.update expects (targetSpeed, smoothingFactor),
+            // not (position, speed). Copy it once per client tick so the copied
+            // model follows the player's gait without accelerating per render frame.
+            disguise.walkAnimation.update(player.walkAnimation.speed(), 1.0F);
+            if (player.swinging && player.swingTime == 0) {
+                disguise.swing(player.getUsedItemHand());
+            }
             syncFromPlayer(disguise, player);
         }
     }
@@ -110,11 +117,6 @@ public final class MimicDisguiseRenderer {
         disguise.setShiftKeyDown(player.isShiftKeyDown());
         disguise.setSwimming(player.isSwimming());
         disguise.setPose(player.getPose());
-        // Copy the player's animation clock directly. The render-only entity has
-        // no authoritative movement simulation, so relying on its own tick would
-        // leave walk cycles stuck or out of phase with the real player.
-        disguise.walkAnimation.update(player.walkAnimation.position(), player.walkAnimation.speed());
-        disguise.walkAnimation.update(player.walkAnimation.position(), player.walkAnimation.speed());
 
         // A disguise is meant to conceal the player, not display their gear.
         // In particular, never copy armour into the render-only creature:
