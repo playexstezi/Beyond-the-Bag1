@@ -245,6 +245,30 @@ public final class MimicFormEvents {
             player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 120, 0));
         }
 
+        String id = data.getString(FORM_KEY).toLowerCase(java.util.Locale.ROOT);
+        // Registry-name traits let forms from other mods receive a fitting
+        // ability without linking against that mod's classes.
+        if (id.contains("blaze") || id.contains("magma") || id.contains("fire")
+                || id.contains("dragon")) {
+            player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 240, 0));
+        }
+        if (id.contains("phantom") || id.contains("bat") || id.contains("bird")
+                || id.contains("bee") || id.contains("elytra") || id.contains("flying")) {
+            player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 200, 0));
+        }
+        if (id.contains("slime") || id.contains("rabbit") || id.contains("frog")) {
+            player.addEffect(new MobEffectInstance(MobEffects.JUMP, 180, 1));
+        }
+        if (id.contains("guardian") || id.contains("golem") || id.contains("turtle")
+                || id.contains("wither")) {
+            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 180, 1));
+        }
+        if (id.contains("squid") || id.contains("fish") || id.contains("dolphin")
+                || id.contains("axolotl") || id.contains("aquatic")) {
+            player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 240, 0));
+            player.addEffect(new MobEffectInstance(MobEffects.DOLPHINS_GRACE, 180, 0));
+        }
+
         switch (mobType) {
             case "ARTHROPOD" -> {
                 player.addEffect(new MobEffectInstance(MobEffects.JUMP, 160, 1));
@@ -300,7 +324,30 @@ public final class MimicFormEvents {
                     player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 80, 0, true, false));
             case "minecraft:skeleton", "minecraft:stray", "minecraft:bogged" ->
                     player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 80, 0, true, false));
-            default -> { }
+            default -> applyAdaptivePassive(player, player.getPersistentData());
+        }
+    }
+
+    private static void applyAdaptivePassive(Player player, CompoundTag data) {
+        String mobType = data.getString(MOB_TYPE_KEY);
+        String id = data.getString(FORM_KEY).toLowerCase(java.util.Locale.ROOT);
+        float speed = data.getFloat(SPEED_KEY);
+        float health = data.getFloat(HEALTH_KEY);
+        float damage = data.getFloat(DAMAGE_KEY);
+
+        if (speed >= 0.30F) {
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 80, 0, true, false));
+        }
+        if (health >= 40.0F || damage >= 10.0F) {
+            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 80, 0, true, false));
+        }
+        if ("WATER".equals(mobType) || id.contains("fish") || id.contains("squid")
+                || id.contains("aquatic")) {
+            player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 80, 0, true, false));
+        }
+        if (id.contains("phantom") || id.contains("flying") || id.contains("bird")
+                || id.contains("bat")) {
+            player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 80, 0, true, false));
         }
     }
 }
