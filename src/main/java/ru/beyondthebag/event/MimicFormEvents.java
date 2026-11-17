@@ -10,7 +10,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
@@ -44,6 +43,14 @@ public final class MimicFormEvents {
                 && player.getInventory().armor.get(0).is(ModItems.MIMIC_BOOTS.get());
     }
 
+
+    private static String mobTypeKey(LivingEntity target) {
+        if (target.getMobType() == net.minecraft.world.entity.MobType.ARTHROPOD) return "ARTHROPOD";
+        if (target.getMobType() == net.minecraft.world.entity.MobType.UNDEAD) return "UNDEAD";
+        if (target.getMobType() == net.minecraft.world.entity.MobType.WATER) return "WATER";
+        return "OTHER";
+    }
+
     @SubscribeEvent
     public static void onCopyForm(PlayerInteractEvent.EntityInteract event) {
         if (!(event.getEntity() instanceof ServerPlayer player)
@@ -60,7 +67,7 @@ public final class MimicFormEvents {
                 : target.getType().getDescription().getString();
         player.getPersistentData().putString(FORM_KEY, form);
         player.getPersistentData().putString(NAME_KEY, display);
-        player.getPersistentData().putString(MOB_TYPE_KEY, target.getMobType().name());
+        player.getPersistentData().putString(MOB_TYPE_KEY, mobTypeKey(target));
         player.getPersistentData().putFloat(SPEED_KEY, (float) target.getAttributeValue(Attributes.MOVEMENT_SPEED));
         player.getPersistentData().putFloat(HEALTH_KEY, (float) target.getMaxHealth());
         player.getPersistentData().putFloat(DAMAGE_KEY, (float) target.getAttributeValue(Attributes.ATTACK_DAMAGE));
