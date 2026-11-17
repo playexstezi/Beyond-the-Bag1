@@ -6,6 +6,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -121,7 +122,23 @@ public final class MimicSoulbladeEvents {
             data.remove(previousKey);
         }
         data.remove(RETURN_AT);
-        data.putBoolean("beyondthebag_mimic_disguise_active", false);
+        boolean wasActive = data.getBoolean("beyondthebag_mimic_disguise_active");
+        String restoredForm = data.getString("beyondthebag_mimic_form");
+        MimicNetwork.broadcastForm(player.getUUID(), restoredForm, wasActive);
         return true;
+    }
+
+    /** Restore the previous mimic form when the temporary soulblade form expires. */
+    @SubscribeEvent
+    public static void tickTemporaryForm(TickEvent.PlayerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || event.player.level().isClientSide
+                || !(event.player instanceof ServerPlayer player)) return;
+        CompoundTag data = player.getPersistentData();
+        long returnAt = data.getLong(RETURN_AT);
+        if (returnAt == 0L || player.level().getGameTime() < returnAt) return;
+        if (restoreTemporaryForm(player)) {
+            player.displayClientMessage(net.minecraft.network.chat.Component.literal(
+                    "§7Связь души рассеялась. Прежняя форма восстановлена."), true);
+        }
     }
 }
