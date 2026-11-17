@@ -396,7 +396,7 @@ public final class MimicFormEvents {
         if (!(event.getEntity() instanceof ServerPlayer joining)) return;
         for (ServerPlayer online : joining.server.getPlayerList().getPlayers()) {
             CompoundTag data = online.getPersistentData();
-            if (data.getBoolean(DISGUISE_ACTIVE_KEY) && hasFullSet(online)) {
+            if (data.getBoolean(DISGUISE_ACTIVE_KEY)) {
                 MimicNetwork.broadcastForm(online.getUUID(), data.getString(FORM_KEY), true);
             }
         }
