@@ -19,6 +19,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -100,6 +101,7 @@ public final class MimicFormEvents {
     }
 
     private static String mobTypeKey(LivingEntity target) {
+        if (target instanceof net.minecraft.world.entity.monster.AbstractIllager) return "ILLAGER";
         if (target.getMobType() == net.minecraft.world.entity.MobType.ARTHROPOD) return "ARTHROPOD";
         if (target.getMobType() == net.minecraft.world.entity.MobType.UNDEAD) return "UNDEAD";
         if (target.getMobType() == net.minecraft.world.entity.MobType.WATER) return "WATER";
@@ -260,6 +262,23 @@ public final class MimicFormEvents {
                 } else {
                     player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 0));
                 }
+            }
+        }
+    }
+
+    /**
+     * Forge creates a fresh player entity on death. Copy only this mod's
+     * mimic state so saved forms survive respawn without overwriting other mods' data.
+     */
+    @SubscribeEvent
+    public static void onPlayerClone(PlayerEvent.Clone event) {
+        if (event.isWasDeath()) {
+            CompoundTag oldData = event.getOriginal().getPersistentData();
+            CompoundTag newData = event.getEntity().getPersistentData();
+            String[] keys = { FORM_KEY, NAME_KEY, COOLDOWN_KEY, MOB_TYPE_KEY,
+                    SPEED_KEY, HEALTH_KEY, DAMAGE_KEY, FORMS_KEY, FORM_INDEX_KEY };
+            for (String key : keys) {
+                if (oldData.contains(key)) newData.put(key, oldData.get(key).copy());
             }
         }
     }
