@@ -227,7 +227,7 @@ public final class MimicFormEvents {
         }
         data.putLong(COOLDOWN_KEY, now + 20 * 25);
         player.displayClientMessage(Component.literal("§dАктивна форма: §f" + name), true);
-        player.playNotifySound(SoundEvents.RESPAWN_ANCHOR_DEPLETE, SoundSource.PLAYERS, 0.8F, 1.25F);
+        player.playNotifySound(SoundEvents.RESPAWN_ANCHOR_DEPLETE.value(), SoundSource.PLAYERS, 0.8F, 1.25F);
     }
 
 
@@ -397,7 +397,7 @@ public final class MimicFormEvents {
             volume = 0.9F;
             pitch = 0.72F;
         } else if (stage == 3 && elapsed >= 20L) {
-            sound = SoundEvents.RESPAWN_ANCHOR_CHARGE;
+            sound = SoundEvents.RESPAWN_ANCHOR_CHARGE.value();
             particles = ParticleTypes.REVERSE_PORTAL;
             particleCount = 36;
             volume = 0.8F;
