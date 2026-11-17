@@ -17,6 +17,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tier;
+import net.minecraft.world.level.Level;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.TooltipFlag;
+import java.util.List;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -41,6 +45,12 @@ public final class BattleSpoonItem extends SwordItem {
             player.playSound(SoundEvents.IRON_GOLEM_ATTACK, 0.9F, 1.25F);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+    }
+
+    @Override
+    public void appendHoverText(ItemStack stack, Level level, List<Component> tooltip, TooltipFlag flag) {
+        tooltip.add(Component.translatable("tooltip.beyondthebag.battle_spoon"));
+        super.appendHoverText(stack, level, tooltip, flag);
     }
 
     @Override
