@@ -10,6 +10,8 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobType;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
@@ -27,6 +29,10 @@ public final class MimicFormEvents {
     private static final String FORM_KEY = "beyondthebag_mimic_form";
     private static final String NAME_KEY = "beyondthebag_mimic_form_name";
     private static final String COOLDOWN_KEY = "beyondthebag_mimic_form_ready";
+    private static final String MOB_TYPE_KEY = "beyondthebag_mimic_mob_type";
+    private static final String SPEED_KEY = "beyondthebag_mimic_speed";
+    private static final String HEALTH_KEY = "beyondthebag_mimic_health";
+    private static final String DAMAGE_KEY = "beyondthebag_mimic_damage";
     private MimicFormEvents() {}
 
     private static boolean hasFullSet(Player player) {
@@ -54,6 +60,10 @@ public final class MimicFormEvents {
                 : target.getType().getDescription().getString();
         player.getPersistentData().putString(FORM_KEY, form);
         player.getPersistentData().putString(NAME_KEY, display);
+        player.getPersistentData().putString(MOB_TYPE_KEY, target.getMobType().name());
+        player.getPersistentData().putFloat(SPEED_KEY, (float) target.getAttributeValue(Attributes.MOVEMENT_SPEED));
+        player.getPersistentData().putFloat(HEALTH_KEY, (float) target.getMaxHealth());
+        player.getPersistentData().putFloat(DAMAGE_KEY, (float) target.getAttributeValue(Attributes.ATTACK_DAMAGE));
         player.displayClientMessage(Component.translatable("message.beyondthebag.mimic_form_selected", display), true);
         player.playNotifySound(SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.8F, 1.35F);
         event.setCanceled(true);
@@ -132,14 +142,58 @@ public final class MimicFormEvents {
                 player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 120, 1));
                 player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 120, 1));
             }
-            default -> {
-                player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 120, 0));
-                player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 100, 0));
-            }
+            default -> applyAdaptiveForm(player, data);
         }
         data.putLong(COOLDOWN_KEY, now + 20 * 25);
         player.displayClientMessage(Component.translatable("message.beyondthebag.mimic_form_used", name), true);
         player.playNotifySound(SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.9F, 1.2F);
+    }
+
+
+    /**
+     * Универсальная способность для любых зарегистрированных Forge-сущностей.
+     * Сохраняем ID существа и его характеристики, поэтому поддерживаются и модовые формы.
+     */
+    private static void applyAdaptiveForm(ServerPlayer player, net.minecraft.nbt.CompoundTag data) {
+        String mobType = data.getString(MOB_TYPE_KEY);
+        float speed = data.getFloat(SPEED_KEY);
+        float health = data.getFloat(HEALTH_KEY);
+        float damage = data.getFloat(DAMAGE_KEY);
+
+        int speedLevel = speed >= 0.32F ? 2 : speed >= 0.22F ? 1 : 0;
+        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 160, speedLevel));
+
+        if (health >= 40.0F) {
+            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 140, 1));
+        } else if (health >= 20.0F) {
+            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 120, 0));
+        }
+
+        if (damage >= 8.0F) {
+            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 120, 1));
+        } else if (damage > 0.0F) {
+            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 120, 0));
+        }
+
+        switch (mobType) {
+            case "ARTHROPOD" -> {
+                player.addEffect(new MobEffectInstance(MobEffects.JUMP, 160, 1));
+                player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 160, 1));
+            }
+            case "UNDEAD" -> player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 160, 1));
+            case "WATER" -> {
+                player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 240, 0));
+                player.addEffect(new MobEffectInstance(MobEffects.DOLPHINS_GRACE, 160, 0));
+            }
+            case "ILLAGER" -> player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 160, 1));
+            default -> {
+                if (speed >= 0.30F) {
+                    player.addEffect(new MobEffectInstance(MobEffects.JUMP, 120, 1));
+                } else {
+                    player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 0));
+                }
+            }
+        }
     }
 
     @SubscribeEvent
