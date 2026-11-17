@@ -62,7 +62,7 @@ public final class GuardianEntity extends Monster {
             getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(18.0D);
             getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.22D);
             getAttribute(Attributes.ARMOR).setBaseValue(12.0D);
-            if (getHealth() < 1.0F || getHealth() > 144.0F) setHealth(144.0F);
+            setHealth(144.0F);
             bossEvent.setName(getDisplayName());
             refreshDimensions();
         }
