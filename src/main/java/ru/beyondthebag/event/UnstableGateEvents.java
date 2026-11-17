@@ -8,6 +8,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import ru.beyondthebag.world.MazeLayout;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import ru.beyondthebag.BeyondTheBag;
@@ -20,6 +22,35 @@ import ru.beyondthebag.item.DimensionBagItem;
 @Mod.EventBusSubscriber(modid = BeyondTheBag.MOD_ID)
 public final class UnstableGateEvents {
     private UnstableGateEvents() {}
+
+    @SubscribeEvent
+    public static void onGuardianDeath(LivingDeathEvent event) {
+        if (!(event.getEntity() instanceof GuardianEntity guardian)
+                || !guardian.isExpeditionBoss()
+                || !(guardian.level() instanceof ServerLevel level)
+                || !level.dimension().equals(DimensionBagItem.UNSTABLE_WORLD)) return;
+        for (ServerPlayer player : level.getEntitiesOfClass(ServerPlayer.class,
+                guardian.getBoundingBox().inflate(160.0D), p -> p.isAlive() && !p.isSpectator())) {
+            PocketData data = PocketData.get(player.server.overworld());
+            PocketData.Expedition expedition = data.getExpedition(player.getUUID()).orElse(null);
+            if (expedition == null) continue;
+            MazeLayout layout = MazeLayout.generate(expedition.seed(), expedition.instability());
+            if (layout.rooms().size() < 2) continue;
+            MazeLayout.Room exitRoom = layout.rooms().get(layout.rooms().size() - 2);
+            int originX = Math.floorMod((int) (expedition.seed() >>> 32), 8192) * 16;
+            int originZ = Math.floorMod((int) expedition.seed(), 8192) * 16;
+            BlockPos center = new BlockPos(originX + exitRoom.x() * 28, 73, originZ + exitRoom.z() * 28);
+            level.setBlock(center, Blocks.RESPAWN_ANCHOR.defaultBlockState(), 3);
+            for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
+                if (dx != 0 || dz != 0) level.setBlock(center.offset(dx, 0, dz),
+                        Blocks.CRYING_OBSIDIAN.defaultBlockState(), 3);
+            }
+            level.playSound(null, center, SoundEvents.RESPAWN_ANCHOR_CHARGE, SoundSource.BLOCKS, 2.0F, 0.65F);
+            for (ServerPlayer member : level.getEntitiesOfClass(ServerPlayer.class, new AABB(center).inflate(128.0D)))
+                member.displayClientMessage(Component.literal("§dПространство дрогнуло. В другой комнате проявились врата выхода."), false);
+            return;
+        }
+    }
 
     @SubscribeEvent
     public static void onGateActivated(PlayerInteractEvent.RightClickBlock event) {
