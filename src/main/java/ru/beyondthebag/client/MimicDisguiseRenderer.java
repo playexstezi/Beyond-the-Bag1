@@ -143,7 +143,10 @@ public final class MimicDisguiseRenderer {
         Player player = event.getEntity();
         UUID id = player.getUUID();
         String form = ACTIVE_FORMS.get(id);
-        if (form == null || form.equals("minecraft:player")) return;
+        // Do not interfere with vanilla player rendering unless a valid living-entity
+        // disguise is available. In the normal state this deliberately leaves the
+        // complete vanilla player renderer (including all four armour layers) intact.
+        if (form == null || form.isBlank() || form.equals("minecraft:player")) return;
 
         LivingEntity disguise = getOrCreate(id, form);
         if (disguise == null) return;
