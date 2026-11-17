@@ -20,12 +20,6 @@ public class TrueSoulItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
         if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
             var data = serverPlayer.getPersistentData();
-            data.remove("beyondthebag_mimic_form");
-            data.remove("beyondthebag_mimic_form_name");
-            data.remove("beyondthebag_mimic_mob_type");
-            data.remove("beyondthebag_mimic_speed");
-            data.remove("beyondthebag_mimic_health");
-            data.remove("beyondthebag_mimic_damage");
             data.putBoolean("beyondthebag_mimic_disguise_active", false);
             data.remove("beyondthebag_mimic_transform_start");
             data.remove("beyondthebag_mimic_transform_stage");
