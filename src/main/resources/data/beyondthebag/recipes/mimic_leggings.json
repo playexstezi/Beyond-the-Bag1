@@ -3,11 +3,14 @@
   "pattern": [
     "NNN",
     "N N",
-    "N N"
+    "NFN"
   ],
   "key": {
     "N": {
       "item": "minecraft:netherite_ingot"
+    },
+    "F": {
+      "item": "beyondthebag:mimic_fragment"
     }
   },
   "result": {
