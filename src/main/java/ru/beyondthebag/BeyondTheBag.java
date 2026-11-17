@@ -20,6 +20,14 @@ public final class BeyondTheBag {
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
+        if (event.getTabKey() == CreativeModeTabs.COMBAT) {
+            event.accept(ModItems.MIMIC_FRAGMENT);
+            event.accept(ModItems.MIMIC_HELMET);
+            event.accept(ModItems.MIMIC_CHESTPLATE);
+            event.accept(ModItems.MIMIC_LEGGINGS);
+            event.accept(ModItems.MIMIC_BOOTS);
+            event.accept(ModItems.BATTLE_SPOON);
+        }
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             event.accept(ModItems.DIMENSION_BAG);
             event.accept(ModItems.MIRROR_FRAGMENT);

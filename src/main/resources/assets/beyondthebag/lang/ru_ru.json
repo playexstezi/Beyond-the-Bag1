@@ -5,6 +5,13 @@
   "item.beyondthebag.distortion_core": "Ядро искажения",
   "item.beyondthebag.guardian_heart": "Сердце Хранителя",
   "item.beyondthebag.expedition_stabilizer": "Стабилизатор экспедиции",
+  "item.beyondthebag.mimic_helmet": "Шлем мимика",
+  "item.beyondthebag.mimic_chestplate": "Нагрудник мимика",
+  "item.beyondthebag.mimic_leggings": "Поножи мимика",
+  "item.beyondthebag.mimic_boots": "Сапоги мимика",
+  "item.beyondthebag.battle_spoon": "Боевая поварская ложка",
+  "tooltip.beyondthebag.mimic_set": "Полный комплект: скорость и сила I",
+  "tooltip.beyondthebag.battle_spoon": "Удар замедляет противника; ПКМ: боевой азарт с перезарядкой."
   "message.beyondthebag.stabilizer_used": "Стабилизатор ослабил искажение общей экспедиции.",
   "message.beyondthebag.stabilizer_empty": "Экспедиция уже находится в стабильном состоянии.",
   "message.beyondthebag.menu_pending": "Мешок пока не может открыть меню.",
