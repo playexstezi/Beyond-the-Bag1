@@ -27,6 +27,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import ru.beyondthebag.data.PocketData;
 import ru.beyondthebag.data.ExpeditionType;
 import ru.beyondthebag.world.RiddleWorldBuilder;
+import ru.beyondthebag.world.DungeonWorldBuilder;
 import ru.beyondthebag.world.MazeWorldBuilder;
 
 /** The bag randomly opens a permanent personal realm or an unstable expedition. */
@@ -151,17 +152,20 @@ public final class DimensionBagItem extends Item {
             data.retainActiveExpeditionMembers(activeMembers);
             long seed = ThreadLocalRandom.current().nextLong();
             long runId = ThreadLocalRandom.current().nextLong();
-            ExpeditionType requestedType = ThreadLocalRandom.current().nextFloat() < 0.25F
-                    ? ExpeditionType.RIDDLE : ExpeditionType.MAZE;
+            float routeRoll = ThreadLocalRandom.current().nextFloat();
+            ExpeditionType requestedType = routeRoll < 0.15F ? ExpeditionType.DUNGEON
+                    : routeRoll < 0.40F ? ExpeditionType.RIDDLE : ExpeditionType.MAZE;
             PocketData.Expedition expedition = data.joinOrStartExpedition(
                     serverPlayer.getUUID(), seed, runId,
                     serverPlayer.server.overworld().getGameTime(), 1200L, requestedType);
             // Members of the same rendezvous share one deterministic entry point and route.
             int expeditionX = Math.floorMod((int) (expedition.seed() >>> 32), 8192) * 16;
             int expeditionZ = Math.floorMod((int) expedition.seed(), 8192) * 16;
-            BlockPos spawn = expedition.type() == ExpeditionType.RIDDLE
-                    ? RiddleWorldBuilder.buildIfNeeded(destination, data, expedition, expeditionX, expeditionZ)
-                    : MazeWorldBuilder.buildIfNeeded(destination, data, expedition, expeditionX, expeditionZ);
+            BlockPos spawn = switch (expedition.type()) {
+                case RIDDLE -> RiddleWorldBuilder.buildIfNeeded(destination, data, expedition, expeditionX, expeditionZ);
+                case DUNGEON -> DungeonWorldBuilder.buildIfNeeded(destination, data, expedition, expeditionX, expeditionZ);
+                default -> MazeWorldBuilder.buildIfNeeded(destination, data, expedition, expeditionX, expeditionZ);
+            };
             serverPlayer.getPersistentData().putLong("beyondthebag_expedition_entered_at",
                     serverPlayer.server.overworld().getGameTime());
             serverPlayer.teleportTo(destination, spawn.getX() + 0.5, spawn.getY(),

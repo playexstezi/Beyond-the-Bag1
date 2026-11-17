@@ -14,6 +14,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import ru.beyondthebag.BeyondTheBag;
 import ru.beyondthebag.data.PocketData;
+import ru.beyondthebag.data.ExpeditionType;
 import ru.beyondthebag.entity.GuardianEntity;
 import net.minecraft.world.phys.AABB;
 import ru.beyondthebag.item.DimensionBagItem;
@@ -34,12 +35,17 @@ public final class UnstableGateEvents {
             PocketData data = PocketData.get(player.server.overworld());
             PocketData.Expedition expedition = data.getExpedition(player.getUUID()).orElse(null);
             if (expedition == null) continue;
-            MazeLayout layout = MazeLayout.generate(expedition.seed(), expedition.instability());
-            if (layout.rooms().size() < 2) continue;
-            MazeLayout.Room exitRoom = layout.rooms().get(layout.rooms().size() - 2);
             int originX = Math.floorMod((int) (expedition.seed() >>> 32), 8192) * 16;
             int originZ = Math.floorMod((int) expedition.seed(), 8192) * 16;
-            BlockPos center = new BlockPos(originX + exitRoom.x() * 28, 73, originZ + exitRoom.z() * 28);
+            BlockPos center;
+            if (expedition.type() == ExpeditionType.DUNGEON) {
+                center = ru.beyondthebag.world.DungeonWorldBuilder.gatePosition(originX, originZ);
+            } else {
+                MazeLayout layout = MazeLayout.generate(expedition.seed(), expedition.instability());
+                if (layout.rooms().size() < 2) continue;
+                MazeLayout.Room exitRoom = layout.rooms().get(layout.rooms().size() - 2);
+                center = new BlockPos(originX + exitRoom.x() * 28, 73, originZ + exitRoom.z() * 28);
+            }
             level.setBlock(center, Blocks.RESPAWN_ANCHOR.defaultBlockState(), 3);
             for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
                 if (dx != 0 || dz != 0) level.setBlock(center.offset(dx, 0, dz),
