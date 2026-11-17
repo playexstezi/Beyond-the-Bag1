@@ -25,5 +25,8 @@ public final class MimicArmorEvents {
         if (!fullSet) return;
         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 80, 0, true, false));
         player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 80, 0, true, false));
+        if (player.isCrouching()) {
+            player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 60, 0, true, false, false));
+        }
     }
 }
