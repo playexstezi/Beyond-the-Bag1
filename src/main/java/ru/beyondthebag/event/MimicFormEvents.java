@@ -7,6 +7,8 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -349,26 +351,38 @@ public final class MimicFormEvents {
         long elapsed = player.level().getGameTime() - startedAt;
         int stage = data.getInt(TRANSFORM_STAGE_KEY);
         SoundEvent sound = null;
+        ParticleOptions particles = null;
+        int particleCount = 0;
         float volume = 0.85F;
         float pitch = 1.0F;
 
         if (stage == 0 && elapsed >= 0L) {
             sound = SoundEvents.PLAYER_HURT;
+            particles = ParticleTypes.CRIT;
+            particleCount = 18;
             pitch = 0.78F;
         } else if (stage == 1 && elapsed >= 7L) {
             sound = SoundEvents.PLAYER_HURT;
+            particles = ParticleTypes.DAMAGE_INDICATOR;
+            particleCount = 12;
             volume = 0.72F;
             pitch = 0.62F;
         } else if (stage == 2 && elapsed >= 15L) {
             sound = SoundEvents.ZOMBIE_VILLAGER_CURE;
+            particles = ParticleTypes.WITCH;
+            particleCount = 28;
             volume = 0.9F;
             pitch = 0.72F;
         } else if (stage == 3 && elapsed >= 25L) {
             sound = SoundEvents.ENDERMAN_TELEPORT;
+            particles = ParticleTypes.REVERSE_PORTAL;
+            particleCount = 36;
             volume = 0.8F;
             pitch = 0.78F;
         } else if (stage == 4 && elapsed >= 38L) {
             sound = SoundEvents.PLAYER_LEVELUP;
+            particles = ParticleTypes.SOUL;
+            particleCount = 24;
             volume = 0.7F;
             pitch = 0.9F;
         }
@@ -376,6 +390,13 @@ public final class MimicFormEvents {
         if (sound != null) {
             player.level().playSound(null, player.blockPosition(), sound,
                     SoundSource.PLAYERS, volume, pitch);
+            if (particles != null && player.level() instanceof ServerLevel serverLevel) {
+                serverLevel.sendParticles(particles, player.getX(), player.getY() + 0.9D,
+                        player.getZ(), particleCount, 0.42D, 0.75D, 0.42D, 0.035D);
+                serverLevel.sendParticles(ParticleTypes.ENCHANT, player.getX(),
+                        player.getY() + 0.9D, player.getZ(), 10, 0.35D, 0.65D,
+                        0.35D, 0.6D);
+            }
             data.putInt(TRANSFORM_STAGE_KEY, stage + 1);
             if (stage == 4) {
                 data.remove(TRANSFORM_START_KEY);
