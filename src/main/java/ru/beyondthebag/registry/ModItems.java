@@ -11,10 +11,12 @@ import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.eventbus.api.IEventBus;
 import ru.beyondthebag.BeyondTheBag;
 import ru.beyondthebag.item.DimensionBagItem;
+import ru.beyondthebag.item.TrueSoulItem;
 
 public final class ModItems {
     private ModItems() {}
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, BeyondTheBag.MOD_ID);
+    public static final RegistryObject<Item> TRUE_SOUL = ITEMS.register("true_soul", () -> new TrueSoulItem(new Item.Properties().stacksTo(1).fireResistant()));
     public static final RegistryObject<Item> MIMIC_FRAGMENT = ITEMS.register("mimic_fragment",
         () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> DIMENSION_BAG = ITEMS.register("dimension_bag",
