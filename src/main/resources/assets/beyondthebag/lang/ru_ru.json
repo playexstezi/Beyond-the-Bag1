@@ -46,5 +46,9 @@
   "entity.beyondthebag.watcher": "Наблюдатель",
   "entity.beyondthebag.distorted": "Искажённый",
   "entity.beyondthebag.guardian": "Хранитель",
-  "entity.beyondthebag.mimic": "Мимик"
+  "entity.beyondthebag.mimic": "Мимик",
+  "item.beyondthebag.true_soul": "Истинная душа",
+  "tooltip.beyondthebag.true_soul": "ПКМ: вернуть исходный облик, сохранив пойманные формы.",
+  "key.categories.beyondthebag": "Beyond the Bag",
+  "key.beyondthebag.use_mimic_ability": "Использовать способность формы мимика"
 }
