@@ -88,7 +88,7 @@ public final class MimicFormEvents {
                 player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 120, 1));
                 player.addEffect(new MobEffectInstance(MobEffects.JUMP, 120, 1));
                 for (Monster mob : level.getEntitiesOfClass(Monster.class,
-                        player.getBoundingBox().inflate(4.0D), target -> target != player && target.isAlive())) {
+                        player.getBoundingBox().inflate(4.0D), Monster::isAlive)) {
                     mob.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 1));
                 }
             }
@@ -108,7 +108,7 @@ public final class MimicFormEvents {
             }
             case "minecraft:creeper" -> {
                 for (Monster mob : level.getEntitiesOfClass(Monster.class,
-                        player.getBoundingBox().inflate(4.0D), target -> target != player && target.isAlive())) {
+                        player.getBoundingBox().inflate(4.0D), Monster::isAlive)) {
                     if (mob.hurt(level.damageSources().playerAttack(player), 6.0F)) {
                         mob.knockback(1.0D, player.getX() - mob.getX(), player.getZ() - mob.getZ());
                     }
