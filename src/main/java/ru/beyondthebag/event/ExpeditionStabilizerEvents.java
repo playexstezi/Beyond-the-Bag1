@@ -2,9 +2,9 @@ package ru.beyondthebag.event;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.level.Level;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -20,7 +20,7 @@ public final class ExpeditionStabilizerEvents {
     @SubscribeEvent
     public static void onUse(PlayerInteractEvent.RightClickItem event) {
         if (!(event.getEntity() instanceof ServerPlayer player)
-                || !(event.getLevel() instanceof Level level)
+                || !(event.getLevel() instanceof ServerLevel level)
                 || !level.dimension().equals(DimensionBagItem.UNSTABLE_WORLD)
                 || !player.getItemInHand(event.getHand()).is(ModItems.EXPEDITION_STABILIZER.get())) return;
 
