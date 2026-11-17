@@ -1,13 +1,13 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "MMM",
-    "M M",
-    "M M"
+    "NNN",
+    "N N",
+    "N N"
   ],
   "key": {
-    "M": {
-      "item": "beyondthebag:mimic_fragment"
+    "N": {
+      "item": "minecraft:netherite_ingot"
     }
   },
   "result": {
