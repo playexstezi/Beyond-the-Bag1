@@ -7,11 +7,30 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tier;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 
 /** A heavy cooking spoon repurposed as a close-combat weapon. */
 public final class BattleSpoonItem extends SwordItem {
     public BattleSpoonItem(Tier tier, int damage, float speed, Item.Properties properties) {
         super(tier, damage, speed, properties);
+    }
+
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        if (player.getCooldowns().isOnCooldown(this)) return InteractionResultHolder.fail(stack);
+        if (!level.isClientSide) {
+            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 100, 1));
+            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 60, 0));
+            player.getCooldowns().addCooldown(this, 20 * 22);
+            stack.hurtAndBreak(1, player, entity -> entity.broadcastBreakEvent(hand));
+            player.playSound(SoundEvents.IRON_GOLEM_ATTACK, 0.9F, 1.25F);
+        }
+        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
     }
 
     @Override

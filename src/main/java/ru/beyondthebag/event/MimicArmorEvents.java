@@ -18,8 +18,10 @@ public final class MimicArmorEvents {
         if (event.phase != TickEvent.Phase.END || event.player.level().isClientSide) return;
         Player player = event.player;
         if (player.tickCount % 40 != 0) return;
+        boolean chestPiece = player.getInventory().armor.get(2).is(ModItems.MIMIC_CHESTPLATE.get())
+                || player.getInventory().armor.get(2).is(ModItems.MIMIC_WINGS.get());
         boolean fullSet = player.getInventory().armor.get(3).is(ModItems.MIMIC_HELMET.get())
-                && player.getInventory().armor.get(2).is(ModItems.MIMIC_CHESTPLATE.get())
+                && chestPiece
                 && player.getInventory().armor.get(1).is(ModItems.MIMIC_LEGGINGS.get())
                 && player.getInventory().armor.get(0).is(ModItems.MIMIC_BOOTS.get());
         if (!fullSet) return;

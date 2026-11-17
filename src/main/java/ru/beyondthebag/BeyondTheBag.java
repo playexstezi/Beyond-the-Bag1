@@ -26,6 +26,7 @@ public final class BeyondTheBag {
             event.accept(ModItems.MIMIC_LEGGINGS);
             event.accept(ModItems.MIMIC_BOOTS);
             event.accept(ModItems.BATTLE_SPOON);
+            event.accept(ModItems.MIMIC_WINGS);
         }
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             event.accept(ModItems.DIMENSION_BAG);
@@ -33,7 +34,6 @@ public final class BeyondTheBag {
             event.accept(ModItems.DISTORTION_CORE);
             event.accept(ModItems.GUARDIAN_HEART);
             event.accept(ModItems.EXPEDITION_STABILIZER);
-            event.accept(ModItems.MIMIC_WINGS);
         }
     }
 }

@@ -3,7 +3,7 @@ package ru.beyondthebag.registry;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterials;
-import net.minecraft.world.item.ElytraItem;
+import ru.beyondthebag.item.MimicWingsArmorItem;
 import net.minecraft.world.item.Tiers;
 import ru.beyondthebag.item.BattleSpoonItem;
 import net.minecraftforge.registries.DeferredRegister;
@@ -29,7 +29,7 @@ public final class ModItems {
     public static final RegistryObject<Item> EXPEDITION_STABILIZER = ITEMS.register("expedition_stabilizer",
         () -> new Item(new Item.Properties().stacksTo(16).fireResistant()));
     public static final RegistryObject<Item> MIMIC_HELMET = ITEMS.register("mimic_helmet",
-        () -> new ArmorItem(ArmorMaterials.CHAIN, ArmorItem.Type.HELMET, new Item.Properties().fireResistant()));
+        () -> new ArmorItem(ru.beyondthebag.item.MimicArmorMaterial.MIMIC, ArmorItem.Type.HELMET, new Item.Properties().fireResistant()));
     public static final RegistryObject<Item> MIMIC_CHESTPLATE = ITEMS.register("mimic_chestplate",
         () -> new ArmorItem(ArmorMaterials.CHAIN, ArmorItem.Type.CHESTPLATE, new Item.Properties().fireResistant()));
     public static final RegistryObject<Item> MIMIC_LEGGINGS = ITEMS.register("mimic_leggings",
@@ -37,7 +37,7 @@ public final class ModItems {
     public static final RegistryObject<Item> MIMIC_BOOTS = ITEMS.register("mimic_boots",
         () -> new ArmorItem(ArmorMaterials.CHAIN, ArmorItem.Type.BOOTS, new Item.Properties().fireResistant()));
     public static final RegistryObject<Item> MIMIC_WINGS = ITEMS.register("mimic_wings",
-        () -> new ElytraItem(new Item.Properties().durability(560).fireResistant()));
+        () -> new MimicWingsArmorItem(ru.beyondthebag.item.MimicArmorMaterial.MIMIC, new Item.Properties().fireResistant()));
     public static final RegistryObject<Item> BATTLE_SPOON = ITEMS.register("battle_spoon",
         () -> new BattleSpoonItem(Tiers.IRON, 4, -2.4F, new Item.Properties().durability(480).fireResistant()));
     public static void register(IEventBus bus) { ITEMS.register(bus); }
