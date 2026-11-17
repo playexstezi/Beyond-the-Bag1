@@ -397,7 +397,7 @@ public final class MimicFormEvents {
             volume = 0.9F;
             pitch = 0.72F;
         } else if (stage == 3 && elapsed >= 20L) {
-            sound = SoundEvents.RESPAWN_ANCHOR_CHARGE.value();
+            sound = SoundEvents.RESPAWN_ANCHOR_CHARGE;
             particles = ParticleTypes.REVERSE_PORTAL;
             particleCount = 36;
             volume = 0.8F;
