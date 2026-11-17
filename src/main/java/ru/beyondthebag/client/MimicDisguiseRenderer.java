@@ -31,6 +31,11 @@ public final class MimicDisguiseRenderer {
     }
 
     @SubscribeEvent
+    public static void onLogout(net.minecraftforge.client.event.ClientPlayerNetworkEvent.LoggingOut event) {
+        ACTIVE_FORMS.clear();
+    }
+
+    @SubscribeEvent
     public static void renderDisguise(RenderPlayerEvent.Pre event) {
         String id = ACTIVE_FORMS.get(event.getEntity().getUUID());
         if (id == null || id.equals("minecraft:player")) return;
@@ -56,6 +61,14 @@ public final class MimicDisguiseRenderer {
         disguise.yBodyRotO = player.yBodyRotO;
         disguise.yHeadRotO = player.yHeadRotO;
         disguise.tickCount = player.tickCount;
+        disguise.setDeltaMovement(player.getDeltaMovement());
+        disguise.setOnGround(player.onGround());
+        disguise.setSprinting(player.isSprinting());
+        disguise.setShiftKeyDown(player.isShiftKeyDown());
+        disguise.setSwimming(player.isSwimming());
+        disguise.setPose(player.getPose());
+        disguise.walkAnimation.update(player.walkAnimation.position(), player.walkAnimation.speed());
+        if (disguise instanceof net.minecraft.world.entity.Mob mob) mob.setNoAi(true);
 
         PoseStack pose = event.getPoseStack();
         EntityRenderDispatcher dispatcher = minecraft.getEntityRenderDispatcher();
