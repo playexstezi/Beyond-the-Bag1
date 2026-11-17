@@ -43,6 +43,14 @@ public final class MirrorWorldBuilder {
                 }
             }
             buildFalsePassage(level, originX + STEP, originZ);
+            BlockPos lootPos = new BlockPos(originX + STEP * 2 + 5, Y + 1, originZ + 1);
+            set(level, lootPos, Blocks.CHEST.defaultBlockState());
+            if (level.getBlockEntity(lootPos) instanceof net.minecraft.world.level.block.entity.ChestBlockEntity chest) {
+                chest.clearContent();
+                chest.setItem(0, new net.minecraft.world.item.ItemStack(ru.beyondthebag.registry.ModItems.MIRROR_FRAGMENT.get(), 3));
+                chest.setItem(1, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.AMETHYST_SHARD, 6));
+                chest.setChanged();
+            }
             set(level, gatePosition(originX, originZ).below(), Blocks.PURPUR_BLOCK.defaultBlockState());
             data.markMazeGenerated(expedition.runId());
         }

@@ -22,6 +22,9 @@ public final class BeyondTheBag {
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             event.accept(ModItems.DIMENSION_BAG);
+            event.accept(ModItems.MIRROR_FRAGMENT);
+            event.accept(ModItems.DISTORTION_CORE);
+            event.accept(ModItems.GUARDIAN_HEART);
         }
     }
 }

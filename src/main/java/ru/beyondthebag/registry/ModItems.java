@@ -15,5 +15,11 @@ public final class ModItems {
         () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> DIMENSION_BAG = ITEMS.register("dimension_bag",
         () -> new DimensionBagItem(new Item.Properties().stacksTo(1).fireResistant()));
+    public static final RegistryObject<Item> MIRROR_FRAGMENT = ITEMS.register("mirror_fragment",
+        () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> DISTORTION_CORE = ITEMS.register("distortion_core",
+        () -> new Item(new Item.Properties().fireResistant()));
+    public static final RegistryObject<Item> GUARDIAN_HEART = ITEMS.register("guardian_heart",
+        () -> new Item(new Item.Properties().stacksTo(1).fireResistant()));
     public static void register(IEventBus bus) { ITEMS.register(bus); }
 }

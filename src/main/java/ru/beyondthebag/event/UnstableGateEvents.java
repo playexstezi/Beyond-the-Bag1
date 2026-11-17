@@ -18,6 +18,8 @@ import ru.beyondthebag.data.ExpeditionType;
 import ru.beyondthebag.entity.GuardianEntity;
 import net.minecraft.world.phys.AABB;
 import ru.beyondthebag.item.DimensionBagItem;
+import ru.beyondthebag.registry.ModItems;
+import net.minecraft.world.item.ItemStack;
 
 /** Handles the physical return gate placed in the final chamber of an expedition. */
 @Mod.EventBusSubscriber(modid = BeyondTheBag.MOD_ID)
@@ -30,6 +32,7 @@ public final class UnstableGateEvents {
                 || !guardian.isExpeditionBoss()
                 || !(guardian.level() instanceof ServerLevel level)
                 || !level.dimension().equals(DimensionBagItem.UNSTABLE_WORLD)) return;
+        guardian.spawnAtLocation(new ItemStack(ModItems.GUARDIAN_HEART.get()));
         for (ServerPlayer player : level.getEntitiesOfClass(ServerPlayer.class,
                 guardian.getBoundingBox().inflate(160.0D), p -> p.isAlive() && !p.isSpectator())) {
             PocketData data = PocketData.get(player.server.overworld());

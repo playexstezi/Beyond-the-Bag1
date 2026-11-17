@@ -35,6 +35,7 @@ public final class DistortionWorldBuilder {
                 chest.setItem(0, new ItemStack(Items.AMETHYST_SHARD, 12));
                 chest.setItem(1, new ItemStack(Items.ECHO_SHARD, 2));
                 chest.setItem(2, new ItemStack(Items.GOLD_INGOT, 8));
+                chest.setItem(3, new ItemStack(ru.beyondthebag.registry.ModItems.DISTORTION_CORE.get(), 1));
                 chest.setChanged();
             }
 
