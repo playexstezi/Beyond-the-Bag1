@@ -110,6 +110,10 @@ public final class MimicDisguiseRenderer {
         disguise.setShiftKeyDown(player.isShiftKeyDown());
         disguise.setSwimming(player.isSwimming());
         disguise.setPose(player.getPose());
+        // Copy the player's animation clock directly. The render-only entity has
+        // no authoritative movement simulation, so relying on its own tick would
+        // leave walk cycles stuck or out of phase with the real player.
+        disguise.walkAnimation.update(player.walkAnimation.position(), player.walkAnimation.speed());
         disguise.walkAnimation.update(player.walkAnimation.position(), player.walkAnimation.speed());
 
         // A disguise is meant to conceal the player, not display their gear.
@@ -118,11 +122,10 @@ public final class MimicDisguiseRenderer {
         // player's custom armour. The real player keeps vanilla armour rendering
         // whenever no disguise is active. Clear any stale armour from cached
         // render entities as well.
-        for (net.minecraft.world.entity.EquipmentSlot slot : net.minecraft.world.entity.EquipmentSlot.values()) {
-            if (slot.getType() == net.minecraft.world.entity.EquipmentSlot.Type.HUMANOID_ARMOR) {
-                disguise.setItemSlot(slot, net.minecraft.world.item.ItemStack.EMPTY);
-            }
-        }
+        disguise.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD, net.minecraft.world.item.ItemStack.EMPTY);
+        disguise.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.item.ItemStack.EMPTY);
+        disguise.setItemSlot(net.minecraft.world.entity.EquipmentSlot.LEGS, net.minecraft.world.item.ItemStack.EMPTY);
+        disguise.setItemSlot(net.minecraft.world.entity.EquipmentSlot.FEET, net.minecraft.world.item.ItemStack.EMPTY);
 
         // Held items are not armour and may still be part of the disguise.
         for (net.minecraft.world.entity.EquipmentSlot slot : new net.minecraft.world.entity.EquipmentSlot[] {
