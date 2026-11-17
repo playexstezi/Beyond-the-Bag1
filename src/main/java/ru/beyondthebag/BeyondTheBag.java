@@ -30,6 +30,7 @@ public final class BeyondTheBag {
             event.accept(ModItems.MIMIC_LEGGINGS);
             event.accept(ModItems.MIMIC_BOOTS);
             event.accept(ModItems.BATTLE_SPOON);
+            event.accept(ModItems.MIMIC_SOULBLADE);
             event.accept(ModItems.MIMIC_WINGS);
         }
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
