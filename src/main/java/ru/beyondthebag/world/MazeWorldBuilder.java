@@ -18,7 +18,7 @@ import ru.beyondthebag.data.PocketData;
 /** Places the deterministic expedition graph as a simple, explorable block maze. */
 public final class MazeWorldBuilder {
     private static final int FLOOR_Y = 72;
-    private static final int SPACING = 24;
+    private static final int SPACING = 28;
     private static final int ROOM_RADIUS = 6;
     private static final int WALL_HEIGHT = 6;
     private static final int TERRITORY_HEIGHT = 18;
@@ -76,7 +76,7 @@ public final class MazeWorldBuilder {
             maxZ = Math.max(maxZ, z + ROOM_RADIUS + 2);
         }
         BlockState boundary = Blocks.BEDROCK.defaultBlockState();
-        for (int y = FLOOR_Y + 1; y <= FLOOR_Y + TERRITORY_HEIGHT; y++) {
+        for (int y = FLOOR_Y + 1; y < FLOOR_Y + TERRITORY_HEIGHT; y++) {
             for (int x = minX; x <= maxX; x++) {
                 setBlockIfChanged(level, new BlockPos(x, y, minZ), boundary, 3);
                 setBlockIfChanged(level, new BlockPos(x, y, maxZ), boundary, 3);
@@ -86,9 +86,14 @@ public final class MazeWorldBuilder {
                 setBlockIfChanged(level, new BlockPos(maxX, y, z), boundary, 3);
             }
         }
-        // Rooms and corridors already have solid ceilings. Avoid filling the entire
-        // rectangular bounding box with bedrock: for large mazes that can mean
-        // hundreds of thousands of extra block updates during dimension entry.
+        // A continuous roof closes the expedition volume. Individual rooms and
+        // corridors keep their own ceilings, so the roof is only a thin perimeter cap.
+        int roofY = FLOOR_Y + TERRITORY_HEIGHT;
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                setBlockIfChanged(level, new BlockPos(x, roofY, z), boundary, 3);
+            }
+        }
     }
 
     /** Avoids expensive block updates when generation revisits an already-correct block. */

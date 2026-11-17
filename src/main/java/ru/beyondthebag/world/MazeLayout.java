@@ -48,7 +48,7 @@ public final class MazeLayout {
     public static MazeLayout generate(long seed, int requestedInstability) {
         int instability = Math.max(0, Math.min(4, requestedInstability));
         Random random = new Random(seed);
-        int target = 42 + random.nextInt(13) + instability * 7;
+        int target = 54 + random.nextInt(15) + instability * 8;
         List<MutableRoom> rooms = new ArrayList<>();
         List<MutableRoom> frontier = new ArrayList<>();
         Set<Long> occupied = new HashSet<>();

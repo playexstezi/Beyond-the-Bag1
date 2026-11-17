@@ -51,9 +51,9 @@ public final class GuardianEntity extends Monster {
         if (boss) {
             setCustomName(Component.literal("Хранитель измерения"));
             setCustomNameVisible(true);
-            getAttribute(Attributes.MAX_HEALTH).setBaseValue(180.0D);
-            setHealth(180.0F);
-            getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(13.0D);
+            getAttribute(Attributes.MAX_HEALTH).setBaseValue(360.0D);
+            setHealth(360.0F);
+            getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(26.0D);
             getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.22D);
             getAttribute(Attributes.ARMOR).setBaseValue(12.0D);
             bossEvent.setName(getDisplayName());
@@ -99,7 +99,7 @@ public final class GuardianEntity extends Monster {
         if (!enraged && getHealth() <= getMaxHealth() * 0.5F) {
             enraged = true;
             getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.30D);
-            getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(16.0D);
+            getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(32.0D);
             addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 20 * 60, 0));
             server.sendParticles(ParticleTypes.SOUL, getX(), getY() + 1.0D, getZ(),
                     45, 1.8D, 1.0D, 1.8D, 0.08D);
