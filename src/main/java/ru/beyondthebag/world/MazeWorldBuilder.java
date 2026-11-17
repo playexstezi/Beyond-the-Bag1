@@ -86,12 +86,15 @@ public final class MazeWorldBuilder {
                 setBlockIfChanged(level, new BlockPos(maxX, y, z), boundary, 3);
             }
         }
-        // A continuous roof closes the expedition volume. Individual rooms and
-        // corridors keep their own ceilings, so the roof is only a thin perimeter cap.
+        // A continuous roof and bedrock underside close the expedition volume.
+        // This prevents escape by flight, digging below the rooms, or falling into
+        // unloaded void terrain. Both caps are written once per generated run.
         int roofY = FLOOR_Y + TERRITORY_HEIGHT;
+        int bottomY = FLOOR_Y - 1;
         for (int x = minX; x <= maxX; x++) {
             for (int z = minZ; z <= maxZ; z++) {
                 setBlockIfChanged(level, new BlockPos(x, roofY, z), boundary, 3);
+                setBlockIfChanged(level, new BlockPos(x, bottomY, z), boundary, 3);
             }
         }
     }
