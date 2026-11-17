@@ -108,6 +108,7 @@ public final class MazeWorldBuilder {
         BlockState wall = switch (room.type()) {
             case ANOMALY, BOSS -> Blocks.CRYING_OBSIDIAN.defaultBlockState();
             case SHRINE -> Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
+            case EXIT -> Blocks.PURPUR_BLOCK.defaultBlockState();
             default -> Blocks.DEEPSLATE_BRICKS.defaultBlockState();
         };
         BlockState floor = switch (room.type()) {
@@ -116,6 +117,7 @@ public final class MazeWorldBuilder {
             case ANOMALY, BOSS -> Blocks.BLACKSTONE.defaultBlockState();
             case REST -> Blocks.MOSS_BLOCK.defaultBlockState();
             case SHRINE -> Blocks.POLISHED_BLACKSTONE.defaultBlockState();
+            case EXIT -> Blocks.PURPUR_PILLAR.defaultBlockState();
             case PUZZLE -> Blocks.CUT_COPPER.defaultBlockState();
             default -> Blocks.DEEPSLATE_TILES.defaultBlockState();
         };
@@ -165,18 +167,15 @@ public final class MazeWorldBuilder {
             setBlockIfChanged(level, new BlockPos(cx, FLOOR_Y + 1, cz), Blocks.LODESTONE.defaultBlockState(), 3);
             setBlockIfChanged(level, new BlockPos(cx - 2, FLOOR_Y + 1, cz), Blocks.REDSTONE_LAMP.defaultBlockState(), 3);
         }
+        if (room.type() == MazeLayout.RoomType.EXIT) {
+            setBlockIfChanged(level, new BlockPos(cx, FLOOR_Y + 1, cz), Blocks.PURPUR_PILLAR.defaultBlockState(), 3);
+            setBlockIfChanged(level, new BlockPos(cx, FLOOR_Y + 2, cz), Blocks.END_ROD.defaultBlockState(), 3);
+            setBlockIfChanged(level, new BlockPos(cx, FLOOR_Y + 1, cz + 2), Blocks.SOUL_LANTERN.defaultBlockState(), 3);
+        }
+
         if (room.type() == MazeLayout.RoomType.BOSS) {
-            // The final chamber contains the expedition's physical return gate.
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dz = -1; dz <= 1; dz++) {
-                    if (Math.abs(dx) == 1 || Math.abs(dz) == 1) {
-                        setBlockIfChanged(level, new BlockPos(cx + dx, FLOOR_Y + 1, cz + dz),
-                                Blocks.CRYING_OBSIDIAN.defaultBlockState(), 3);
-                    }
-                }
-            }
-            setBlockIfChanged(level, new BlockPos(cx, FLOOR_Y + 1, cz),
-                    Blocks.RESPAWN_ANCHOR.defaultBlockState(), 3);
+            // The return gate is deliberately absent from the boss chamber.
+            // It materializes in the separate EXIT room only after the guardian dies.
             BlockPos rewardPos = new BlockPos(cx + 3, FLOOR_Y + 1, cz + 3);
             setBlockIfChanged(level, rewardPos, Blocks.CHEST.defaultBlockState(), 3);
             if (level.getBlockEntity(rewardPos) instanceof ChestBlockEntity chest) {

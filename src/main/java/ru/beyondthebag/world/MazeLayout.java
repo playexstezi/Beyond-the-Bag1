@@ -15,7 +15,7 @@ import java.util.Random;
  */
 public final class MazeLayout {
     public enum RoomType {
-        ENTRY, CORRIDOR, CHAMBER, DEAD_END, TREASURE, HAZARD, ANOMALY, RARE, REST, SHRINE, PUZZLE, BOSS
+        ENTRY, CORRIDOR, CHAMBER, DEAD_END, TREASURE, HAZARD, ANOMALY, RARE, REST, SHRINE, PUZZLE, EXIT, BOSS
     }
 
     public record Room(int id, int x, int z, RoomType type, int danger,
@@ -114,6 +114,7 @@ public final class MazeLayout {
 
     private static RoomType chooseType(Random random, int index, int total, int instability) {
         if (index == total - 1) return RoomType.BOSS;
+        if (index == total - 2) return RoomType.EXIT;
         float roll = random.nextFloat();
         if (roll < 0.07f) return RoomType.DEAD_END;
         if (roll < 0.17f + instability * 0.025f) return RoomType.HAZARD;
@@ -123,6 +124,7 @@ public final class MazeLayout {
         if (roll < 0.47f) return RoomType.REST;
         if (roll < 0.53f) return RoomType.SHRINE;
         if (roll < 0.59f) return RoomType.PUZZLE;
+        if (roll < 0.61f) return RoomType.EXIT;
         if (roll < 0.76f) return RoomType.CORRIDOR;
         return RoomType.CHAMBER;
     }
