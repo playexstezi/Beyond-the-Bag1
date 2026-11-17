@@ -5,7 +5,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.crafting.Ingredient;
-import ru.beyondthebag.registry.ModItems;
 
 public enum MimicArmorMaterial implements ArmorMaterial {
     MIMIC;
@@ -30,5 +29,5 @@ public enum MimicArmorMaterial implements ArmorMaterial {
     @Override public Ingredient getRepairIngredient() { return Ingredient.of(net.minecraft.world.item.Items.NETHERITE_INGOT); }
     @Override public String getName() { return "beyondthebag:mimic"; }
     @Override public float getToughness() { return 3.0F; }
-    @Override public float getKnockbackResistance() { return 0.1F }
+    @Override public float getKnockbackResistance() { return 0.1F; }
 }
