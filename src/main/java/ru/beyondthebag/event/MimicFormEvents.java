@@ -44,6 +44,12 @@ public final class MimicFormEvents {
     }
 
 
+
+    private static double safeAttribute(LivingEntity entity, net.minecraft.world.entity.ai.attributes.Attribute attribute) {
+        var instance = entity.getAttribute(attribute);
+        return instance == null ? 0.0D : instance.getValue();
+    }
+
     private static String mobTypeKey(LivingEntity target) {
         if (target.getMobType() == net.minecraft.world.entity.MobType.ARTHROPOD) return "ARTHROPOD";
         if (target.getMobType() == net.minecraft.world.entity.MobType.UNDEAD) return "UNDEAD";
@@ -68,9 +74,9 @@ public final class MimicFormEvents {
         player.getPersistentData().putString(FORM_KEY, form);
         player.getPersistentData().putString(NAME_KEY, display);
         player.getPersistentData().putString(MOB_TYPE_KEY, mobTypeKey(target));
-        player.getPersistentData().putFloat(SPEED_KEY, (float) target.getAttributeValue(Attributes.MOVEMENT_SPEED));
-        player.getPersistentData().putFloat(HEALTH_KEY, (float) target.getMaxHealth());
-        player.getPersistentData().putFloat(DAMAGE_KEY, (float) target.getAttributeValue(Attributes.ATTACK_DAMAGE));
+        player.getPersistentData().putFloat(SPEED_KEY, (float) safeAttribute(target, Attributes.MOVEMENT_SPEED));
+        player.getPersistentData().putFloat(HEALTH_KEY, target.getMaxHealth());
+        player.getPersistentData().putFloat(DAMAGE_KEY, (float) safeAttribute(target, Attributes.ATTACK_DAMAGE));
         player.displayClientMessage(Component.translatable("message.beyondthebag.mimic_form_selected", display), true);
         player.playNotifySound(SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.8F, 1.35F);
         event.setCanceled(true);
