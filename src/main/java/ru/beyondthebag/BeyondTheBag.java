@@ -7,6 +7,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import ru.beyondthebag.registry.ModEntities;
 import ru.beyondthebag.registry.ModItems;
+import ru.beyondthebag.network.MimicNetwork;
 
 @Mod(BeyondTheBag.MOD_ID)
 public final class BeyondTheBag {
@@ -16,6 +17,7 @@ public final class BeyondTheBag {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         ModItems.register(bus);
         ModEntities.register(bus);
+        MimicNetwork.register();
         bus.addListener(this::addCreative);
     }
 
