@@ -25,10 +25,29 @@ public final class MimicNetwork {
                 .decoder(FormStatePacket::decode)
                 .consumerMainThread(FormStatePacket::handle)
                 .add();
+        CHANNEL.messageBuilder(UseMimicAbilityPacket.class, nextId++)
+                .encoder(UseMimicAbilityPacket::encode)
+                .decoder(UseMimicAbilityPacket::decode)
+                .consumerMainThread(UseMimicAbilityPacket::handle)
+                .add();
     }
 
     public static void broadcastForm(UUID playerId, String formId, boolean active) {
         CHANNEL.send(PacketDistributor.ALL.noArg(), new FormStatePacket(playerId, formId, active));
+    }
+
+    public record UseMimicAbilityPacket() {
+        static void encode(UseMimicAbilityPacket packet, FriendlyByteBuf buffer) {}
+        static UseMimicAbilityPacket decode(FriendlyByteBuf buffer) { return new UseMimicAbilityPacket(); }
+        static void handle(UseMimicAbilityPacket packet, java.util.function.Supplier<net.minecraftforge.network.NetworkEvent.Context> context) {
+            net.minecraft.server.level.ServerPlayer player = context.get().getSender();
+            if (player != null) context.get().enqueueWork(() -> ru.beyondthebag.event.MimicFormEvents.useBoundAbility(player));
+            context.get().setPacketHandled(true);
+        }
+    }
+
+    public static void requestAbility() {
+        CHANNEL.sendToServer(new UseMimicAbilityPacket());
     }
 
     public record FormStatePacket(UUID playerId, String formId, boolean active) {
