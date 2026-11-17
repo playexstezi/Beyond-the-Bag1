@@ -13,7 +13,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.phys.AABB;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -39,6 +38,7 @@ public final class UnstableGateEvents {
                 || !level.dimension().equals(DimensionBagItem.UNSTABLE_WORLD)) return;
 
         guardian.spawnAtLocation(new ItemStack(ModItems.GUARDIAN_HEART.get()));
+        PocketData.get(level.getServer().overworld()).markExpeditionBossDefeated(guardian.getExpeditionRunId());
         Set<Long> handledRuns = new HashSet<>();
         // Resolve every participant's run, not just the first player returned by the
         // entity query. This keeps party expeditions correct when players are spread out.
@@ -102,15 +102,9 @@ public final class UnstableGateEvents {
             return;
         }
 
-        // A newly generated gate is only accessible after the expedition guardian
-        // has actually died. Check the boss arena for this exact run, not a nearby
-        // radius around the exit room (which can be far away in a large maze).
-        boolean bossAlive = level.getEntitiesOfClass(GuardianEntity.class,
-                new AABB(-30_000, level.getMinBuildHeight(), -30_000,
-                        30_000, level.getMaxBuildHeight(), 30_000),
-                boss -> boss.isExpeditionBoss()
-                        && boss.getExpeditionRunId() == expedition.runId())
-                .stream().anyMatch(GuardianEntity::isAlive);
+        // Completion is persisted by run ID when the guardian dies. This avoids
+        // scanning a huge AABB (which can miss distant rooms and load excess chunks).
+        boolean bossAlive = !data.isExpeditionBossDefeated(expedition.runId());
         if (bossAlive) {
             player.displayClientMessage(Component.literal(
                     "§5Врата запечатаны. Победите Хранителя измерения."), true);
