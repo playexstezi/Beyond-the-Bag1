@@ -97,8 +97,7 @@ public final class MimicFormEvents {
         data.putFloat(SPEED_KEY, saved.getFloat("speed"));
         data.putFloat(HEALTH_KEY, saved.getFloat("health"));
         data.putFloat(DAMAGE_KEY, saved.getFloat("damage"));
-        player.displayClientMessage(Component.literal("§bАктивная форма: §f" + saved.getString("name")
-                + " §7(" + (index + 1) + "/" + forms.size() + ")"), true);
+        player.displayClientMessage(Component.literal("§bАктивна: §f" + saved.getString("name")), true);
         player.playNotifySound(SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.7F, 1.6F);
     }
 
@@ -137,7 +136,7 @@ public final class MimicFormEvents {
         data.putFloat(HEALTH_KEY, target.getMaxHealth());
         data.putFloat(DAMAGE_KEY, (float) safeAttribute(target, Attributes.ATTACK_DAMAGE));
         saveForm(data);
-        player.displayClientMessage(Component.translatable("message.beyondthebag.mimic_form_selected", display), true);
+        player.displayClientMessage(Component.literal("§aФорма поймана: §f" + display), true);
         player.playNotifySound(SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.8F, 1.35F);
         event.setCanceled(true);
     }
@@ -227,8 +226,8 @@ public final class MimicFormEvents {
             default -> applyAdaptiveForm(player, data);
         }
         data.putLong(COOLDOWN_KEY, now + 20 * 25);
-        player.displayClientMessage(Component.translatable("message.beyondthebag.mimic_form_used", name), true);
-        player.playNotifySound(SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.9F, 1.2F);
+        player.displayClientMessage(Component.literal("§dАктивна форма: §f" + name), true);
+        player.playNotifySound(SoundEvents.RESPAWN_ANCHOR_DEPLETE, SoundSource.PLAYERS, 0.8F, 1.25F);
     }
 
 
@@ -385,25 +384,25 @@ public final class MimicFormEvents {
             particles = ParticleTypes.CRIT;
             particleCount = 18;
             pitch = 0.78F;
-        } else if (stage == 1 && elapsed >= 7L) {
+        } else if (stage == 1 && elapsed >= 5L) {
             sound = SoundEvents.PLAYER_HURT;
             particles = ParticleTypes.DAMAGE_INDICATOR;
             particleCount = 12;
             volume = 0.72F;
             pitch = 0.62F;
-        } else if (stage == 2 && elapsed >= 15L) {
-            sound = SoundEvents.ZOMBIE_VILLAGER_CURE;
+        } else if (stage == 2 && elapsed >= 12L) {
+            sound = SoundEvents.AMETHYST_BLOCK_CHIME;
             particles = ParticleTypes.WITCH;
             particleCount = 28;
             volume = 0.9F;
             pitch = 0.72F;
-        } else if (stage == 3 && elapsed >= 25L) {
-            sound = SoundEvents.ENDERMAN_TELEPORT;
+        } else if (stage == 3 && elapsed >= 20L) {
+            sound = SoundEvents.RESPAWN_ANCHOR_CHARGE;
             particles = ParticleTypes.REVERSE_PORTAL;
             particleCount = 36;
             volume = 0.8F;
             pitch = 0.78F;
-        } else if (stage == 4 && elapsed >= 38L) {
+        } else if (stage == 4 && elapsed >= 28L) {
             sound = SoundEvents.PLAYER_LEVELUP;
             particles = ParticleTypes.SOUL;
             particleCount = 24;
