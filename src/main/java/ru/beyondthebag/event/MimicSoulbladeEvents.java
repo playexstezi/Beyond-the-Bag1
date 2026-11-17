@@ -5,7 +5,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -14,11 +13,7 @@ import ru.beyondthebag.BeyondTheBag;
 import ru.beyondthebag.network.MimicNetwork;
 import ru.beyondthebag.registry.ModItems;
 
-/**
- * The soulblade binds a creature for 30 seconds instead of killing it.
- * The victim remains at its pre-hit health and regains its original flags
- * when the binding expires.
- */
+/** Binds a creature's essence for 30 seconds instead of killing it. */
 @Mod.EventBusSubscriber(modid = BeyondTheBag.MOD_ID)
 public final class MimicSoulbladeEvents {
     private static final String BOUND_UNTIL = "beyondthebag_soul_bound_until";
@@ -28,12 +23,9 @@ public final class MimicSoulbladeEvents {
     private static final String RETURN_AT = "beyondthebag_soul_form_return";
     private static final String PREFIX = "beyondthebag_soul_previous_";
     private static final String[] FORM_KEYS = {
-            "beyondthebag_mimic_form",
-            "beyondthebag_mimic_form_name",
-            "beyondthebag_mimic_mob_type",
-            "beyondthebag_mimic_speed",
-            "beyondthebag_mimic_health",
-            "beyondthebag_mimic_damage",
+            "beyondthebag_mimic_form", "beyondthebag_mimic_form_name",
+            "beyondthebag_mimic_mob_type", "beyondthebag_mimic_speed",
+            "beyondthebag_mimic_health", "beyondthebag_mimic_damage",
             "beyondthebag_mimic_disguise_active"
     };
 
@@ -52,9 +44,12 @@ public final class MimicSoulbladeEvents {
 
         CompoundTag victimData = victim.getPersistentData();
         long now = victim.level().getGameTime();
-        if (victimData.getLong(BOUND_UNTIL) > now) return;
+        // A creature already bound by this blade must not take the otherwise-lethal hit.
+        if (victimData.getLong(BOUND_UNTIL) > now) {
+            event.setAmount(0.0F);
+            return;
+        }
 
-        // Cancel the lethal damage without reducing the creature to one HP.
         event.setAmount(0.0F);
         victimData.putBoolean(WAS_INVULNERABLE, victim.isInvulnerable());
         victim.setInvulnerable(true);
@@ -114,29 +109,19 @@ public final class MimicSoulbladeEvents {
         data.remove(WAS_NO_AI);
     }
 
-    @SubscribeEvent
-    public static void restoreWielder(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) return;
+    /** Ends the temporary soulblade form immediately and restores the saved mimic selection. */
+    public static boolean restoreTemporaryForm(ServerPlayer player) {
         CompoundTag data = player.getPersistentData();
-        long until = data.getLong(RETURN_AT);
-        if (until == 0L || player.level().getGameTime() < until) return;
+        if (!data.contains(RETURN_AT)) return false;
 
-        String oldForm = "";
-        boolean wasActive = false;
         for (String key : FORM_KEYS) {
             String previousKey = PREFIX + key;
-            if (data.contains(previousKey)) {
-                data.put(key, data.get(previousKey).copy());
-                if (key.equals("beyondthebag_mimic_form")) oldForm = data.getString(key);
-                if (key.equals("beyondthebag_mimic_disguise_active")) wasActive = data.getBoolean(key);
-            } else {
-                data.remove(key);
-            }
+            if (data.contains(previousKey)) data.put(key, data.get(previousKey).copy());
+            else data.remove(key);
             data.remove(previousKey);
         }
-        MimicNetwork.broadcastForm(player.getUUID(), oldForm, wasActive);
         data.remove(RETURN_AT);
-        player.displayClientMessage(net.minecraft.network.chat.Component.literal(
-                "§bДуша вернулась к владельцу."), true);
+        data.putBoolean("beyondthebag_mimic_disguise_active", false);
+        return true;
     }
 }
