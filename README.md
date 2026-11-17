@@ -18,7 +18,13 @@ Current work is in `development/1.0.0`. The `main` branch is intentionally not u
   - `/bagaccess invite <player>`
   - `/bagaccess revoke <player>`
   - `/bagaccess list`
-- Persistent expedition state model: per-player seed, run identifier and instability level clamped to 0–4.\n\n- Deterministic logical maze generator: connected room graph, room types, branches, dead ends and secret links; instability affects maze size and hazard/anomaly frequency.\n- Seeded loot-table generator with instability-gated rare drops and repeatable chest rolls.
+- Persistent expedition state model: per-player seed, run identifier and instability level clamped to 0–4.
+- Deterministic logical maze generator: connected room graph, room types, branches, dead ends and secret links; instability affects maze size and hazard/anomaly frequency.
+- Seeded loot-table generator with instability-gated rare drops and repeatable chest rolls.
+- Player mimics select a nearby explorer, copy their skin and name, imitate movement/building actions, and react to chat.
+- Mimics now mirror the copied player's visible armour and held items without dropping copies of that equipment.
+- Mimic armour set, elytra-compatible wings, form abilities, and the Battle Spoon with crafting recipes.
+- Mirror expeditions, distortion events, anomaly hazards, guardian encounters, and an expedition stabilizer are present in source.
 
 ### Not implemented yet
 - Runtime verification of dimension datapack loading on a clean Forge server.
@@ -26,8 +32,7 @@ Current work is in `development/1.0.0`. The `main` branch is intentionally not u
 - Friend-plot selection and GUI-based invitation management.
 - Bag GUI and invitation management through the GUI (not yet implemented).
 - Placement of the generated maze graph into actual dimension blocks, run reset and chest population from the loot table.
-- Instability events, traps, unique monsters and boss.
-- Server-side dimension interaction protection and full multiplayer travel flow.
+- Full server-side dimension interaction protection and multiplayer travel-flow testing.
 
 ## Build
 
@@ -39,4 +44,4 @@ Requires JDK 17. Run:
 
 The mod JAR is produced in `build/libs/` after a successful build.
 
-This is an active development branch, not a finished release. No release JAR is provided until the agreed gameplay systems are implemented and the build is verified.
+This is an active development branch, not a finished release. A successful CI build is not a substitute for testing the mod in a real Forge client and dedicated server.

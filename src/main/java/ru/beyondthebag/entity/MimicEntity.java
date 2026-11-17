@@ -14,6 +14,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
@@ -112,7 +113,6 @@ public final class MimicEntity extends PathfinderMob {
         }
     }
 
-
     public void respondToChat(ServerPlayer speaker, String message) {
         if (level().isClientSide || !(level() instanceof ServerLevel server) || messageCooldown > 0
                 || !speaker.getUUID().equals(getCopiedPlayerId()) || distanceToSqr(speaker) > 1024.0D
@@ -164,6 +164,7 @@ public final class MimicEntity extends PathfinderMob {
         }
         performCopiedBlockAction(server);
         syncCopiedPlayerScale(target);
+        syncCopiedEquipment(target);
         playAmbientRustle(server, target);
 
         AABB playerArea = target.getBoundingBox().inflate(24.0D);
@@ -192,7 +193,6 @@ public final class MimicEntity extends PathfinderMob {
         double distance = distanceToSqr(target);
         behaviourTicks++;
         if (behaviourTicks % (50 + random.nextInt(31)) == 0) {
-            // Keep a believable distance instead of constantly walking at the player's shoulder.
             if (distance > 576.0D) {
                 Vec3 offset = Vec3.directionFromRotation(0.0F, random.nextFloat() * 360.0F)
                         .scale(9.0D + random.nextDouble() * 6.0D);
@@ -215,14 +215,12 @@ public final class MimicEntity extends PathfinderMob {
                 boolean playerWatching = target.hasLineOfSight(this)
                         && target.getViewVector(1.0F).dot(toMimic) > 0.72D;
                 if (playerWatching) {
-                    // When noticed, act like an ordinary player who has paused.
                     getNavigation().stop();
                     getLookControl().setLookAt(target, 15.0F, 15.0F);
                     if (freezeTicks == 0 && random.nextInt(5) == 0) freezeTicks = 30 + random.nextInt(51);
                 } else if (freezeTicks > 0) {
                     getNavigation().stop();
                 } else {
-                    // Advance only while outside the player's view, choosing an offset rather than a direct chase.
                     Vec3 flank = Vec3.directionFromRotation(0.0F, random.nextFloat() * 360.0F)
                             .scale(3.0D + random.nextDouble() * 4.0D);
                     getNavigation().moveTo(target.getX() + flank.x, target.getY(), target.getZ() + flank.z, 0.68D);
@@ -247,6 +245,21 @@ public final class MimicEntity extends PathfinderMob {
         }
     }
 
+    /**
+     * Keep the copied explorer's equipment visible on the disguise. The mimic
+     * receives copies, never the player's actual stacks, and cannot drop them.
+     */
+    private void syncCopiedEquipment(ServerPlayer player) {
+        if (tickCount % 10 != 0) return;
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            ItemStack targetStack = player.getItemBySlot(slot);
+            ItemStack currentStack = getItemBySlot(slot);
+            if (!ItemStack.matches(currentStack, targetStack)) {
+                setItemSlot(slot, targetStack.copy());
+            }
+            setDropChance(slot, 0.0F);
+        }
+    }
 
     /**
      * Pehkui is optional. Read the player's BASE scale and apply it to the mimic
@@ -268,11 +281,6 @@ public final class MimicEntity extends PathfinderMob {
         }
     }
 
-    /**
-     * Occasionally creates a small environmental sound away from both entities.
-     * The sound is anchored to nearby foliage/wood, so it feels like something
-     * moved through the surroundings rather than coming directly from the mimic.
-     */
     private void playAmbientRustle(ServerLevel server, ServerPlayer target) {
         if (nextRustleTicks > 0 || distanceToSqr(target) < 9.0D || distanceToSqr(target) > 576.0D) return;
         nextRustleTicks = 420 + random.nextInt(901);
@@ -326,6 +334,7 @@ public final class MimicEntity extends PathfinderMob {
             if (!best.getUUID().equals(getCopiedPlayerId())) { copyPlayer(best); stalkTicks = 0; copiedActions.clear(); }
         }
     }
+
     @Override public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
         boolean hit = super.doHurtTarget(target);
         if (hit) animateAction(1);
@@ -334,9 +343,6 @@ public final class MimicEntity extends PathfinderMob {
 
     private void performCopiedBlockAction(ServerLevel server) {
         if (copiedActions.isEmpty()) return;
-
-        // Advance every queued imitation on every tick. Previously only the
-        // head item lost one tick, so a full queue multiplied every delay.
         CopiedBlockAction ready = null;
         int queuedAtStart = copiedActions.size();
         for (int i = 0; i < queuedAtStart; i++) {
@@ -350,13 +356,11 @@ public final class MimicEntity extends PathfinderMob {
                 copiedActions.addLast(action);
             }
         }
-
         if (ready == null) return;
         if (blockActionCooldown > 0) {
             copiedActions.addFirst(ready);
             return;
         }
-
         blockActionCooldown = 12 + random.nextInt(13);
         BlockPos destination = blockPosition().offset(ready.relativePos());
         if (Math.abs(ready.relativePos().getX()) > 4 || Math.abs(ready.relativePos().getY()) > 3
@@ -368,10 +372,10 @@ public final class MimicEntity extends PathfinderMob {
                     && server.setBlock(destination, ready.state(), 3)) animateAction(3);
         } else if (!current.isAir() && !current.hasBlockEntity()
                 && current.is(ready.state().getBlock())) {
-            // No drops: the mimic must not duplicate the player's mined resources.
             if (server.destroyBlock(destination, false, this)) animateAction(2);
         }
     }
+
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
@@ -387,8 +391,6 @@ public final class MimicEntity extends PathfinderMob {
             entityData.set(COPIED_PLAYER, tag.getUUID("BeyondTheBagCopiedPlayer").toString());
         }
         stalkTicks = Math.max(0, tag.getInt("BeyondTheBagStalkTicks"));
-        // Never restore delayed block edits from NBT: their world context may have
-        // changed while the server was offline.
         copiedActions.clear();
     }
 }
