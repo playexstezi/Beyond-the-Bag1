@@ -174,7 +174,8 @@ public final class PocketData extends SavedData {
     public Optional<Expedition> setInstability(UUID player, int level) {
         Expedition current = expeditions.get(player);
         if (current == null) return Optional.empty();
-        Expedition updated = new Expedition(current.seed(), level, current.runId(), current.startedAt());
+        Expedition updated = new Expedition(current.seed(), level, current.runId(),
+                current.startedAt(), current.type());
         expeditions.replaceAll((member, expedition) ->
                 expedition.runId() == current.runId() ? updated : expedition);
         setDirty();
