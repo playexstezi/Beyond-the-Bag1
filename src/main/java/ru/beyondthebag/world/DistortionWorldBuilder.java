@@ -47,6 +47,7 @@ public final class DistortionWorldBuilder {
                 GuardianEntity boss = ModEntities.GUARDIAN.get().create(level);
                 if (boss != null) {
                     boss.setExpeditionBoss(true);
+                    boss.setExpeditionRunId(expedition.runId());
                     boss.setCustomName(net.minecraft.network.chat.Component.literal("Страж искажённого пространства"));
                     boss.moveTo(originX + STEP * 3 + 0.5D, Y + 1, originZ + 0.5D, 180.0F, 0.0F);
                     boss.setPersistenceRequired();
