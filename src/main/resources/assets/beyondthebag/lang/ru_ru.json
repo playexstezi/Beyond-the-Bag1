@@ -12,6 +12,8 @@
   "item.beyondthebag.mimic_boots": "Сапоги мимика",
   "item.beyondthebag.mimic_wings": "Крылья мимика",
   "item.beyondthebag.battle_spoon": "Боевая поварская ложка",
+  "item.beyondthebag.mimic_soulblade": "Клинок связывания душ",
+  "tooltip.beyondthebag.mimic_soulblade": "Смертельный удар связывает душу существа на 30 секунд, не убивая его.",
   "tooltip.beyondthebag.battle_spoon": "Обычный удар ускоряет владельца и иногда ослабляет цель. ПКМ: круговой удар по врагам в радиусе 3 блоков, перезарядка 10 секунд.",
   "message.beyondthebag.stabilizer_used": "Стабилизатор ослабил искажение общей экспедиции.",
   "message.beyondthebag.stabilizer_empty": "Экспедиция уже находится в стабильном состоянии.",
