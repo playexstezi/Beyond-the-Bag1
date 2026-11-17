@@ -3,6 +3,8 @@ package ru.beyondthebag.network;
 import java.util.UUID;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
@@ -41,8 +43,9 @@ public final class MimicNetwork {
         }
 
         static void handle(FormStatePacket packet, java.util.function.Supplier<net.minecraftforge.network.NetworkEvent.Context> context) {
-            context.get().enqueueWork(() -> ru.beyondthebag.client.MimicDisguiseRenderer.setForm(
-                    packet.playerId, packet.formId, packet.active));
+            context.get().enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
+                    () -> () -> ru.beyondthebag.client.MimicDisguiseRenderer.setForm(
+                            packet.playerId, packet.formId, packet.active)));
             context.get().setPacketHandled(true);
         }
     }
