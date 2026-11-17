@@ -11,24 +11,24 @@ public enum MimicArmorMaterial implements ArmorMaterial {
     MIMIC;
     @Override public int getDurabilityForType(ArmorItem.Type type) {
         return switch (type) {
-            case HELMET -> 286;
-            case CHESTPLATE -> 416;
-            case LEGGINGS -> 390;
-            case BOOTS -> 338;
+            case HELMET -> 407;
+            case CHESTPLATE -> 592;
+            case LEGGINGS -> 555;
+            case BOOTS -> 481;
         };
     }
     @Override public int getDefenseForType(ArmorItem.Type type) {
         return switch (type) {
             case HELMET -> 3;
-            case CHESTPLATE -> 7;
+            case CHESTPLATE -> 8;
             case LEGGINGS -> 6;
             case BOOTS -> 3;
         };
     }
-    @Override public int getEnchantmentValue() { return 18; }
-    @Override public SoundEvent getEquipSound() { return SoundEvents.ARMOR_EQUIP_CHAIN; }
-    @Override public Ingredient getRepairIngredient() { return Ingredient.of(ModItems.MIMIC_FRAGMENT.get()); }
+    @Override public int getEnchantmentValue() { return 15; }
+    @Override public SoundEvent getEquipSound() { return SoundEvents.ARMOR_EQUIP_NETHERITE; }
+    @Override public Ingredient getRepairIngredient() { return Ingredient.of(net.minecraft.world.item.Items.NETHERITE_INGOT); }
     @Override public String getName() { return "beyondthebag:mimic"; }
-    @Override public float getToughness() { return 1.5F; }
-    @Override public float getKnockbackResistance() { return 0.05F; }
+    @Override public float getToughness() { return 3.0F; }
+    @Override public float getKnockbackResistance() { return 0.1F }
 }
