@@ -21,6 +21,7 @@ public final class PocketData extends SavedData {
     private final Map<UUID, PersonalRealm> personalRealms = new HashMap<>();
     private final Map<UUID, RealmPosition> personalPositions = new HashMap<>();
     private final Set<Long> generatedExpeditions = new HashSet<>();
+    private final Set<Long> expandedMazeExpeditions = new HashSet<>();
     private final Set<Long> defeatedExpeditions = new HashSet<>();
     private int nextRealmSlot = 0;
     // Stable private plots inside the shared pocket-world dimension. Each plot is allocated once.
@@ -194,7 +195,7 @@ public final class PocketData extends SavedData {
         return Collections.unmodifiableSet(members);
     }
 
-    public boolean isMazeGenerated(long runId) { return generatedExpeditions.contains(runId); }
+    public boolean isMazeGenerated(long runId) { return generatedExpeditions.contains(runId) && expandedMazeExpeditions.contains(runId); }
 
     /** Records boss completion persistently so gate checks never scan enormous world bounds. */
     public void markExpeditionBossDefeated(long runId) {
@@ -205,7 +206,7 @@ public final class PocketData extends SavedData {
         return defeatedExpeditions.contains(runId);
     }
 
-    public void markMazeGenerated(long runId) { if (generatedExpeditions.add(runId)) setDirty(); }
+    public void markMazeGenerated(long runId) { boolean changed = generatedExpeditions.add(runId); changed |= expandedMazeExpeditions.add(runId); if (changed) setDirty(); }
 
     /** Remove stale rendezvous records for players no longer inside the expedition dimension. */
     public void retainActiveExpeditionMembers(Set<UUID> activePlayers) {
@@ -274,6 +275,7 @@ public final class PocketData extends SavedData {
         tag.put("personalPositions", positions);
         long[] generated = generatedExpeditions.stream().mapToLong(Long::longValue).toArray();
         tag.putLongArray("generatedExpeditions", generated);
+        tag.putLongArray("expandedMazeExpeditions", expandedMazeExpeditions.stream().mapToLong(Long::longValue).toArray());
         tag.putLongArray("defeatedExpeditions", defeatedExpeditions.stream().mapToLong(Long::longValue).toArray());
         return tag;
     }
@@ -335,6 +337,7 @@ public final class PocketData extends SavedData {
         ListTag positions = tag.getList("personalPositions", Tag.TAG_COMPOUND);
         for (int i = 0; i < positions.size(); i++) { CompoundTag e = positions.getCompound(i); try { data.personalPositions.put(e.getUUID("owner"), new RealmPosition(e.getDouble("x"), e.getDouble("y"), e.getDouble("z"), e.getFloat("yaw"), e.getFloat("pitch"))); } catch (RuntimeException ignored) {} }
         for (long runId : tag.getLongArray("generatedExpeditions")) data.generatedExpeditions.add(runId);
+        for (long runId : tag.getLongArray("expandedMazeExpeditions")) data.expandedMazeExpeditions.add(runId);
         for (long runId : tag.getLongArray("defeatedExpeditions")) data.defeatedExpeditions.add(runId);
         return data;
     }
