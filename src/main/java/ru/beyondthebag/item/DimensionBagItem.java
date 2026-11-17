@@ -29,6 +29,7 @@ import ru.beyondthebag.data.ExpeditionType;
 import ru.beyondthebag.world.RiddleWorldBuilder;
 import ru.beyondthebag.world.DungeonWorldBuilder;
 import ru.beyondthebag.world.MirrorWorldBuilder;
+import ru.beyondthebag.world.DistortionWorldBuilder;
 import ru.beyondthebag.world.MazeWorldBuilder;
 
 /** The bag randomly opens a permanent personal realm or an unstable expedition. */
@@ -154,9 +155,10 @@ public final class DimensionBagItem extends Item {
             long seed = ThreadLocalRandom.current().nextLong();
             long runId = ThreadLocalRandom.current().nextLong();
             float routeRoll = ThreadLocalRandom.current().nextFloat();
-            ExpeditionType requestedType = routeRoll < 0.10F ? ExpeditionType.MIRROR
-                    : routeRoll < 0.25F ? ExpeditionType.DUNGEON
-                    : routeRoll < 0.50F ? ExpeditionType.RIDDLE : ExpeditionType.MAZE;
+            ExpeditionType requestedType = routeRoll < 0.05F ? ExpeditionType.DISTORTION
+                    : routeRoll < 0.15F ? ExpeditionType.MIRROR
+                    : routeRoll < 0.30F ? ExpeditionType.DUNGEON
+                    : routeRoll < 0.55F ? ExpeditionType.RIDDLE : ExpeditionType.MAZE;
             PocketData.Expedition expedition = data.joinOrStartExpedition(
                     serverPlayer.getUUID(), seed, runId,
                     serverPlayer.server.overworld().getGameTime(), 1200L, requestedType);
@@ -167,6 +169,7 @@ public final class DimensionBagItem extends Item {
                 case RIDDLE -> RiddleWorldBuilder.buildIfNeeded(destination, data, expedition, expeditionX, expeditionZ);
                 case DUNGEON -> DungeonWorldBuilder.buildIfNeeded(destination, data, expedition, expeditionX, expeditionZ);
                 case MIRROR -> MirrorWorldBuilder.buildIfNeeded(destination, data, expedition, expeditionX, expeditionZ);
+                case DISTORTION -> DistortionWorldBuilder.buildIfNeeded(destination, data, expedition, expeditionX, expeditionZ);
                 default -> MazeWorldBuilder.buildIfNeeded(destination, data, expedition, expeditionX, expeditionZ);
             };
             serverPlayer.getPersistentData().putLong("beyondthebag_expedition_entered_at",

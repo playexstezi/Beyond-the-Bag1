@@ -40,6 +40,8 @@ public final class UnstableGateEvents {
             BlockPos center;
             if (expedition.type() == ExpeditionType.DUNGEON) {
                 center = ru.beyondthebag.world.DungeonWorldBuilder.gatePosition(originX, originZ);
+            } else if (expedition.type() == ExpeditionType.DISTORTION) {
+                center = ru.beyondthebag.world.DistortionWorldBuilder.gatePosition(originX, originZ);
             } else {
                 MazeLayout layout = MazeLayout.generate(expedition.seed(), expedition.instability());
                 if (layout.rooms().size() < 2) continue;
