@@ -2,6 +2,9 @@ package ru.beyondthebag.event;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -32,6 +35,8 @@ public final class MimicFormEvents {
     private static final String SPEED_KEY = "beyondthebag_mimic_speed";
     private static final String HEALTH_KEY = "beyondthebag_mimic_health";
     private static final String DAMAGE_KEY = "beyondthebag_mimic_damage";
+    private static final String FORMS_KEY = "beyondthebag_mimic_saved_forms";
+    private static final String FORM_INDEX_KEY = "beyondthebag_mimic_form_index";
     private MimicFormEvents() {}
 
     private static boolean hasFullSet(Player player) {
@@ -44,6 +49,50 @@ public final class MimicFormEvents {
     }
 
 
+
+
+    private static void saveForm(CompoundTag playerData) {
+        ListTag forms = playerData.getList(FORMS_KEY, Tag.TAG_COMPOUND);
+        String id = playerData.getString(FORM_KEY);
+        for (int i = 0; i < forms.size(); i++) {
+            if (forms.getCompound(i).getString("id").equals(id)) {
+                forms.remove(i);
+                break;
+            }
+        }
+        CompoundTag saved = new CompoundTag();
+        saved.putString("id", id);
+        saved.putString("name", playerData.getString(NAME_KEY));
+        saved.putString("mobType", playerData.getString(MOB_TYPE_KEY));
+        saved.putFloat("speed", playerData.getFloat(SPEED_KEY));
+        saved.putFloat("health", playerData.getFloat(HEALTH_KEY));
+        saved.putFloat("damage", playerData.getFloat(DAMAGE_KEY));
+        forms.add(saved);
+        while (forms.size() > 8) forms.remove(0);
+        playerData.put(FORMS_KEY, forms);
+        playerData.putInt(FORM_INDEX_KEY, forms.size() - 1);
+    }
+
+    private static void cycleSavedForm(ServerPlayer player) {
+        CompoundTag data = player.getPersistentData();
+        ListTag forms = data.getList(FORMS_KEY, Tag.TAG_COMPOUND);
+        if (forms.isEmpty()) {
+            player.displayClientMessage(Component.literal("§cСначала скопируй хотя бы одну форму."), true);
+            return;
+        }
+        int index = Math.floorMod(data.getInt(FORM_INDEX_KEY) + 1, forms.size());
+        CompoundTag saved = forms.getCompound(index);
+        data.putInt(FORM_INDEX_KEY, index);
+        data.putString(FORM_KEY, saved.getString("id"));
+        data.putString(NAME_KEY, saved.getString("name"));
+        data.putString(MOB_TYPE_KEY, saved.getString("mobType"));
+        data.putFloat(SPEED_KEY, saved.getFloat("speed"));
+        data.putFloat(HEALTH_KEY, saved.getFloat("health"));
+        data.putFloat(DAMAGE_KEY, saved.getFloat("damage"));
+        player.displayClientMessage(Component.literal("§bАктивная форма: §f" + saved.getString("name")
+                + " §7(" + (index + 1) + "/" + forms.size() + ")"), true);
+        player.playNotifySound(SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.7F, 1.6F);
+    }
 
     private static double safeAttribute(LivingEntity entity, net.minecraft.world.entity.ai.attributes.Attribute attribute) {
         var instance = entity.getAttribute(attribute);
@@ -71,12 +120,14 @@ public final class MimicFormEvents {
                 : String.valueOf(ForgeRegistries.ENTITY_TYPES.getKey(target.getType()));
         String display = target instanceof Player ? target.getName().getString()
                 : target.getType().getDescription().getString();
-        player.getPersistentData().putString(FORM_KEY, form);
-        player.getPersistentData().putString(NAME_KEY, display);
-        player.getPersistentData().putString(MOB_TYPE_KEY, mobTypeKey(target));
-        player.getPersistentData().putFloat(SPEED_KEY, (float) safeAttribute(target, Attributes.MOVEMENT_SPEED));
-        player.getPersistentData().putFloat(HEALTH_KEY, target.getMaxHealth());
-        player.getPersistentData().putFloat(DAMAGE_KEY, (float) safeAttribute(target, Attributes.ATTACK_DAMAGE));
+        var data = player.getPersistentData();
+        data.putString(FORM_KEY, form);
+        data.putString(NAME_KEY, display);
+        data.putString(MOB_TYPE_KEY, mobTypeKey(target));
+        data.putFloat(SPEED_KEY, (float) safeAttribute(target, Attributes.MOVEMENT_SPEED));
+        data.putFloat(HEALTH_KEY, target.getMaxHealth());
+        data.putFloat(DAMAGE_KEY, (float) safeAttribute(target, Attributes.ATTACK_DAMAGE));
+        saveForm(data);
         player.displayClientMessage(Component.translatable("message.beyondthebag.mimic_form_selected", display), true);
         player.playNotifySound(SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.8F, 1.35F);
         event.setCanceled(true);
@@ -92,6 +143,10 @@ public final class MimicFormEvents {
 
         event.setCanceled(true);
         var data = player.getPersistentData();
+        if (player.isShiftKeyDown()) {
+            cycleSavedForm(player);
+            return;
+        }
         String form = data.getString(FORM_KEY);
         if (form.isEmpty()) {
             player.displayClientMessage(Component.translatable("message.beyondthebag.mimic_form_none"), true);
