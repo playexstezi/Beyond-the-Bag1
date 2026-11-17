@@ -198,6 +198,7 @@ public final class MazeWorldBuilder {
                 GuardianEntity guardian = ModEntities.GUARDIAN.get().create(level);
                 if (guardian != null) {
                     guardian.setExpeditionBoss(true);
+                    guardian.setExpeditionRunId(expedition.runId());
                     guardian.moveTo(cx + 4.5D, FLOOR_Y + 1, cz + 0.5D, 180.0F, 0.0F);
                     guardian.setPersistenceRequired();
                     level.addFreshEntity(guardian);
