@@ -10,6 +10,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import ru.beyondthebag.event.MimicSoulbladeEvents;
 import ru.beyondthebag.network.MimicNetwork;
 
 public class TrueSoulItem extends Item {
@@ -20,6 +21,7 @@ public class TrueSoulItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
         if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
             var data = serverPlayer.getPersistentData();
+            MimicSoulbladeEvents.restoreTemporaryForm(serverPlayer);
             data.putBoolean("beyondthebag_mimic_disguise_active", false);
             data.remove("beyondthebag_mimic_transform_start");
             data.remove("beyondthebag_mimic_transform_stage");
