@@ -124,7 +124,6 @@ public final class MazeLayout {
         if (roll < 0.47f) return RoomType.REST;
         if (roll < 0.53f) return RoomType.SHRINE;
         if (roll < 0.59f) return RoomType.PUZZLE;
-        if (roll < 0.61f) return RoomType.EXIT;
         if (roll < 0.76f) return RoomType.CORRIDOR;
         return RoomType.CHAMBER;
     }
