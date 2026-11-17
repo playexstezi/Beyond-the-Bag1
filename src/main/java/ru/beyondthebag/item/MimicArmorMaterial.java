@@ -28,7 +28,7 @@ public enum MimicArmorMaterial implements ArmorMaterial {
     @Override public int getEnchantmentValue() { return 18; }
     @Override public SoundEvent getEquipSound() { return SoundEvents.ARMOR_EQUIP_CHAIN; }
     @Override public Ingredient getRepairIngredient() { return Ingredient.of(ModItems.MIMIC_FRAGMENT.get()); }
-    @Override public String getName() { return "minecraft:chainmail"; }
+    @Override public String getName() { return "beyondthebag:mimic"; }
     @Override public float getToughness() { return 1.5F; }
     @Override public float getKnockbackResistance() { return 0.05F; }
 }
