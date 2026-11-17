@@ -46,7 +46,8 @@ public final class UnstableGateEvents {
             if (!player.isAlive() || player.isSpectator()) continue;
             PocketData data = PocketData.get(player.server.overworld());
             PocketData.Expedition expedition = data.getExpedition(player.getUUID()).orElse(null);
-            if (expedition == null || !handledRuns.add(expedition.runId())) continue;
+            if (expedition == null || expedition.runId() != guardian.getExpeditionRunId()
+                    || !handledRuns.add(expedition.runId())) continue;
 
             int originX = Math.floorMod((int) (expedition.seed() >>> 32), 8192) * 16;
             int originZ = Math.floorMod((int) expedition.seed(), 8192) * 16;
@@ -107,7 +108,9 @@ public final class UnstableGateEvents {
         boolean bossAlive = level.getEntitiesOfClass(GuardianEntity.class,
                 new AABB(-30_000, level.getMinBuildHeight(), -30_000,
                         30_000, level.getMaxBuildHeight(), 30_000),
-                GuardianEntity::isExpeditionBoss).stream().anyMatch(GuardianEntity::isAlive);
+                boss -> boss.isExpeditionBoss()
+                        && boss.getExpeditionRunId() == expedition.runId())
+                .stream().anyMatch(GuardianEntity::isAlive);
         if (bossAlive) {
             player.displayClientMessage(Component.literal(
                     "§5Врата запечатаны. Победите Хранителя измерения."), true);
