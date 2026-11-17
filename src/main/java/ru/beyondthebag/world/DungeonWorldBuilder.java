@@ -21,7 +21,7 @@ public final class DungeonWorldBuilder {
     public static BlockPos buildIfNeeded(ServerLevel level, PocketData data,
             PocketData.Expedition expedition, int ox, int oz) {
         if (!data.isMazeGenerated(expedition.runId())) {
-            for (int room = 0; room < 4; room++) buildRoom(level, ox + room * STEP, oz, room);
+            for (int room = 0; room < 5; room++) buildRoom(level, ox + room * STEP, oz, room);
             BlockPos chestPos = new BlockPos(ox + STEP * 2, Y + 1, oz + 3);
             set(level, chestPos, Blocks.CHEST.defaultBlockState());
             if (level.getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
