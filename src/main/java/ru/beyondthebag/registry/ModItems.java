@@ -12,6 +12,7 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import ru.beyondthebag.BeyondTheBag;
 import ru.beyondthebag.item.DimensionBagItem;
 import ru.beyondthebag.item.TrueSoulItem;
+import ru.beyondthebag.item.MimicSoulbladeItem;
 
 public final class ModItems {
     private ModItems() {}
@@ -41,5 +42,7 @@ public final class ModItems {
         () -> new MimicWingsArmorItem(ru.beyondthebag.item.MimicArmorMaterial.MIMIC, new Item.Properties().fireResistant()));
     public static final RegistryObject<Item> BATTLE_SPOON = ITEMS.register("battle_spoon",
         () -> new BattleSpoonItem(Tiers.IRON, 4, -2.4F, new Item.Properties().durability(480).fireResistant()));
+    public static final RegistryObject<Item> MIMIC_SOULBLADE = ITEMS.register("mimic_soulblade",
+        () -> new MimicSoulbladeItem(Tiers.IRON, 3, -2.4F, new Item.Properties().durability(600).fireResistant()));
     public static void register(IEventBus bus) { ITEMS.register(bus); }
 }
