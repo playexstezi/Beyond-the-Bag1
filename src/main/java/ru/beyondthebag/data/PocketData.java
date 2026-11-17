@@ -25,9 +25,16 @@ public final class PocketData extends SavedData {
     // Stable private plots inside the shared pocket-world dimension. Each plot is allocated once.
 
     /** Persistent state of the current unstable-dimension run. */
-    public record Expedition(long seed, int instability, long runId, long startedAt) {
+    public record Expedition(long seed, int instability, long runId, long startedAt,
+                             ExpeditionType type) {
         public Expedition {
             instability = Math.max(0, Math.min(4, instability));
+            type = type == null ? ExpeditionType.MAZE : type;
+        }
+
+        /** Keeps source compatibility with expedition records created before expedition types existed. */
+        public Expedition(long seed, int instability, long runId, long startedAt) {
+            this(seed, instability, runId, startedAt, ExpeditionType.MAZE);
         }
     }
 
@@ -129,6 +136,11 @@ public final class PocketData extends SavedData {
      */
     public Expedition joinOrStartExpedition(UUID player, long seed, long runId,
                                             long now, long joinWindowTicks) {
+        return joinOrStartExpedition(player, seed, runId, now, joinWindowTicks, ExpeditionType.MAZE);
+    }
+
+    public Expedition joinOrStartExpedition(UUID player, long seed, long runId,
+                                            long now, long joinWindowTicks, ExpeditionType requestedType) {
         Objects.requireNonNull(player);
         Expedition existingForPlayer = expeditions.get(player);
         if (existingForPlayer != null) return existingForPlayer;
@@ -140,8 +152,8 @@ public final class PocketData extends SavedData {
                 .orElse(null);
         Expedition expedition = rendezvous != null
                 ? new Expedition(rendezvous.seed(), rendezvous.instability(),
-                        rendezvous.runId(), rendezvous.startedAt())
-                : new Expedition(seed, 0, runId, now);
+                        rendezvous.runId(), rendezvous.startedAt(), rendezvous.type())
+                : new Expedition(seed, 0, runId, now, requestedType);
         expeditions.put(player, expedition);
         setDirty();
         return expedition;
@@ -230,6 +242,7 @@ public final class PocketData extends SavedData {
             entry.putInt("instability", expedition.instability());
             entry.putLong("runId", expedition.runId());
             entry.putLong("startedAt", expedition.startedAt());
+            entry.putString("type", expedition.type().name());
             expeditionList.add(entry);
         });
         tag.put("expeditions", expeditionList);
@@ -284,8 +297,10 @@ public final class PocketData extends SavedData {
         for (int i = 0; i < expeditionList.size(); i++) {
             CompoundTag entry = expeditionList.getCompound(i);
             try {
+                ExpeditionType type = ExpeditionType.fromSerialized(entry.getString("type"));
                 data.expeditions.put(entry.getUUID("player"), new Expedition(
-                        entry.getLong("seed"), entry.getInt("instability"), entry.getLong("runId"), entry.getLong("startedAt")));
+                        entry.getLong("seed"), entry.getInt("instability"), entry.getLong("runId"),
+                        entry.getLong("startedAt"), type));
             } catch (RuntimeException ignored) {
                 // Ignore malformed expedition state.
             }
