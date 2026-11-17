@@ -35,12 +35,36 @@ public final class ExpeditionLifecycleEvents {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         var death = player.getLastDeathLocation().orElse(null);
         if (death == null || !death.dimension().equals(DimensionBagItem.PERSONAL_WORLD)) return;
-        ServerLevel personal = player.server.getLevel(DimensionBagItem.PERSONAL_WORLD);
-        if (personal == null) return;
-        PocketData.PersonalRealm realm = PocketData.get(personal).getOrCreatePersonalRealm(player.getUUID());
-        BlockPos spawn = personal.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                new BlockPos(realm.centerX(), 0, realm.centerZ()));
-        player.teleportTo(personal, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, player.getYRot(), player.getXRot());
+        ServerLevel overworld = player.server.overworld();
+        PocketData data = PocketData.get(overworld);
+        PocketData.Home home = data.getHome(player.getUUID()).orElse(null);
+        ServerLevel destination = overworld;
+        double x = overworld.getSharedSpawnPos().getX() + 0.5D;
+        double y = overworld.getSharedSpawnPos().getY() + 1.0D;
+        double z = overworld.getSharedSpawnPos().getZ() + 0.5D;
+        float yaw = player.getYRot();
+        float pitch = player.getXRot();
+
+        // Death in the private realm is a route back to the ordinary world,
+        // never a respawn over the void or at a stale private-realm coordinate.
+        if (home != null && home.dimension().equals(overworld.dimension().location())) {
+            x = home.x();
+            y = home.y();
+            z = home.z();
+            yaw = home.yaw();
+            pitch = home.pitch();
+        }
+        BlockPos safe = overworld.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                BlockPos.containing(x, y, z));
+        if (!overworld.getBlockState(safe.below()).isSolid()) {
+            safe = overworld.getSharedSpawnPos().above();
+            x = safe.getX() + 0.5D;
+            y = safe.getY();
+            z = safe.getZ() + 0.5D;
+        } else {
+            y = Math.max(y, safe.getY());
+        }
+        player.teleportTo(destination, x, y, z, yaw, pitch);
     }
 
     @SubscribeEvent
