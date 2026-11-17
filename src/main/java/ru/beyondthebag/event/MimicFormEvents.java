@@ -29,6 +29,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 import ru.beyondthebag.BeyondTheBag;
 import ru.beyondthebag.registry.ModItems;
+import ru.beyondthebag.network.MimicNetwork;
 
 @Mod.EventBusSubscriber(modid = BeyondTheBag.MOD_ID)
 public final class MimicFormEvents {
@@ -43,6 +44,7 @@ public final class MimicFormEvents {
     private static final String FORM_INDEX_KEY = "beyondthebag_mimic_form_index";
     private static final String TRANSFORM_START_KEY = "beyondthebag_mimic_transform_start";
     private static final String TRANSFORM_STAGE_KEY = "beyondthebag_mimic_transform_stage";
+    private static final String DISGUISE_ACTIVE_KEY = "beyondthebag_mimic_disguise_active";
     private MimicFormEvents() {}
 
     private static boolean hasFullSet(Player player) {
@@ -169,6 +171,8 @@ public final class MimicFormEvents {
 
         String name = data.getString(NAME_KEY);
         // A short, synchronized sound sequence sells the painful magical change.
+        data.putBoolean(DISGUISE_ACTIVE_KEY, true);
+        MimicNetwork.broadcastForm(player.getUUID(), form, true);
         data.putLong(TRANSFORM_START_KEY, now);
         data.putInt(TRANSFORM_STAGE_KEY, 0);
         switch (form) {
@@ -307,7 +311,7 @@ public final class MimicFormEvents {
         if (event.isWasDeath()) {
             CompoundTag oldData = event.getOriginal().getPersistentData();
             CompoundTag newData = event.getEntity().getPersistentData();
-            String[] keys = { FORM_KEY, NAME_KEY, COOLDOWN_KEY, MOB_TYPE_KEY,
+            String[] keys = { FORM_KEY, NAME_KEY, COOLDOWN_KEY, MOB_TYPE_KEY, DISGUISE_ACTIVE_KEY,
                     SPEED_KEY, HEALTH_KEY, DAMAGE_KEY, FORMS_KEY, FORM_INDEX_KEY };
             for (String key : keys) {
                 if (oldData.contains(key)) newData.put(key, oldData.get(key).copy());
