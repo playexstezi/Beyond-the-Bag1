@@ -15,54 +15,83 @@ import ru.beyondthebag.network.MimicNetwork;
 import ru.beyondthebag.registry.ModItems;
 
 /**
- * Non-lethal soul capture: the victim remains in the world, frozen and
- * invulnerable for a short time, while the wielder temporarily wears its form.
+ * The soulblade binds a creature for 30 seconds instead of killing it.
+ * The victim remains at its pre-hit health and regains its original flags
+ * when the binding expires.
  */
 @Mod.EventBusSubscriber(modid = BeyondTheBag.MOD_ID)
 public final class MimicSoulbladeEvents {
     private static final String BOUND_UNTIL = "beyondthebag_soul_bound_until";
     private static final String OWNER = "beyondthebag_soul_bound_owner";
+    private static final String WAS_INVULNERABLE = "beyondthebag_soul_was_invulnerable";
+    private static final String WAS_NO_AI = "beyondthebag_soul_was_no_ai";
     private static final String RETURN_AT = "beyondthebag_soul_form_return";
+    private static final String PREFIX = "beyondthebag_soul_previous_";
+    private static final String[] FORM_KEYS = {
+            "beyondthebag_mimic_form",
+            "beyondthebag_mimic_form_name",
+            "beyondthebag_mimic_mob_type",
+            "beyondthebag_mimic_speed",
+            "beyondthebag_mimic_health",
+            "beyondthebag_mimic_damage",
+            "beyondthebag_mimic_disguise_active"
+    };
+
     private MimicSoulbladeEvents() {}
 
     @SubscribeEvent
     public static void onLethalHit(LivingHurtEvent event) {
         LivingEntity victim = event.getEntity();
-        if (victim.level().isClientSide || !(event.getSource().getEntity() instanceof ServerPlayer player)
+        if (victim.level().isClientSide
+                || !(event.getSource().getEntity() instanceof ServerPlayer player)
                 || victim == player || victim instanceof Player || !victim.isAlive()) return;
-        boolean holding = player.getMainHandItem().is(ModItems.MIMIC_SOULBLADE.get())
+
+        boolean holdingBlade = player.getMainHandItem().is(ModItems.MIMIC_SOULBLADE.get())
                 || player.getOffhandItem().is(ModItems.MIMIC_SOULBLADE.get());
-        if (!holding || event.getAmount() < victim.getHealth()) return;
+        if (!holdingBlade || event.getAmount() < victim.getHealth()) return;
 
         CompoundTag victimData = victim.getPersistentData();
-        if (victimData.getLong(BOUND_UNTIL) > victim.level().getGameTime()) return;
+        long now = victim.level().getGameTime();
+        if (victimData.getLong(BOUND_UNTIL) > now) return;
 
+        // Cancel the lethal damage without reducing the creature to one HP.
         event.setAmount(0.0F);
-        victim.setHealth(Math.max(1.0F, Math.min(victim.getHealth(), 1.0F)));
+        victimData.putBoolean(WAS_INVULNERABLE, victim.isInvulnerable());
         victim.setInvulnerable(true);
-        if (victim instanceof Mob mob) mob.setNoAi(true);
-        victimData.putLong(BOUND_UNTIL, victim.level().getGameTime() + 20L * 30L);
+        if (victim instanceof Mob mob) {
+            victimData.putBoolean(WAS_NO_AI, mob.isNoAi());
+            mob.setNoAi(true);
+        } else {
+            victimData.putBoolean(WAS_NO_AI, false);
+        }
+        victimData.putLong(BOUND_UNTIL, now + 20L * 30L);
         victimData.putUUID(OWNER, player.getUUID());
 
         String id = String.valueOf(ForgeRegistries.ENTITY_TYPES.getKey(victim.getType()));
-        CompoundTag data = player.getPersistentData();
-        if (!data.contains(RETURN_AT)) {
-            data.putString(RETURN_AT + "_form", data.getString("beyondthebag_mimic_form"));
-            data.putBoolean(RETURN_AT + "_active", data.getBoolean("beyondthebag_mimic_disguise_active"));
+        CompoundTag playerData = player.getPersistentData();
+        if (!playerData.contains(RETURN_AT)) {
+            for (String key : FORM_KEYS) {
+                if (playerData.contains(key)) {
+                    playerData.put(PREFIX + key, playerData.get(key).copy());
+                } else {
+                    playerData.remove(PREFIX + key);
+                }
+            }
         }
-        data.putLong(RETURN_AT, player.level().getGameTime() + 20L * 30L);
-        data.putString("beyondthebag_mimic_form", id);
-        data.putString("beyondthebag_mimic_form_name", victim.getType().getDescription().getString());
-        data.putFloat("beyondthebag_mimic_speed", (float) victim.getAttributeValue(
-                net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED));
-        data.putFloat("beyondthebag_mimic_health", victim.getMaxHealth());
-        data.putFloat("beyondthebag_mimic_damage", (float) victim.getAttributeValue(
-                net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE));
-        data.putBoolean("beyondthebag_mimic_disguise_active", true);
+        playerData.putLong(RETURN_AT, player.level().getGameTime() + 20L * 30L);
+        playerData.putString("beyondthebag_mimic_form", id);
+        playerData.putString("beyondthebag_mimic_form_name", victim.getType().getDescription().getString());
+        playerData.putString("beyondthebag_mimic_mob_type", victim.getMobType().name());
+        var speed = victim.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
+        var damage = victim.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE);
+        playerData.putFloat("beyondthebag_mimic_speed", speed == null ? 0.0F : (float) speed.getValue());
+        playerData.putFloat("beyondthebag_mimic_health", victim.getMaxHealth());
+        playerData.putFloat("beyondthebag_mimic_damage", damage == null ? 0.0F : (float) damage.getValue());
+        playerData.putBoolean("beyondthebag_mimic_disguise_active", true);
+
         MimicNetwork.broadcastForm(player.getUUID(), id, true);
         player.displayClientMessage(net.minecraft.network.chat.Component.literal(
-                "§5Душа связана: §f" + victim.getType().getDescription().getString()
-                        + " §7(30 сек.)"), true);
+                "§5Душа связана: §f" + victim.getType().getDescription().getString() + " §7(30 сек.)"), true);
     }
 
     @SubscribeEvent
@@ -72,10 +101,13 @@ public final class MimicSoulbladeEvents {
         CompoundTag data = entity.getPersistentData();
         long until = data.getLong(BOUND_UNTIL);
         if (until == 0L || entity.level().getGameTime() < until) return;
-        entity.setInvulnerable(false);
-        if (entity instanceof Mob mob) mob.setNoAi(false);
+
+        entity.setInvulnerable(data.getBoolean(WAS_INVULNERABLE));
+        if (entity instanceof Mob mob) mob.setNoAi(data.getBoolean(WAS_NO_AI));
         data.remove(BOUND_UNTIL);
         data.remove(OWNER);
+        data.remove(WAS_INVULNERABLE);
+        data.remove(WAS_NO_AI);
     }
 
     @SubscribeEvent
@@ -84,14 +116,23 @@ public final class MimicSoulbladeEvents {
         CompoundTag data = player.getPersistentData();
         long until = data.getLong(RETURN_AT);
         if (until == 0L || player.level().getGameTime() < until) return;
-        String oldForm = data.getString(RETURN_AT + "_form");
-        boolean wasActive = data.getBoolean(RETURN_AT + "_active");
-        data.putString("beyondthebag_mimic_form", oldForm);
-        data.putBoolean("beyondthebag_mimic_disguise_active", wasActive);
+
+        String oldForm = "";
+        boolean wasActive = false;
+        for (String key : FORM_KEYS) {
+            String previousKey = PREFIX + key;
+            if (data.contains(previousKey)) {
+                data.put(key, data.get(previousKey).copy());
+                if (key.equals("beyondthebag_mimic_form")) oldForm = data.getString(key);
+                if (key.equals("beyondthebag_mimic_disguise_active")) wasActive = data.getBoolean(key);
+            } else {
+                data.remove(key);
+            }
+            data.remove(previousKey);
+        }
         MimicNetwork.broadcastForm(player.getUUID(), oldForm, wasActive);
         data.remove(RETURN_AT);
-        data.remove(RETURN_AT + "_form");
-        data.remove(RETURN_AT + "_active");
-        player.displayClientMessage(net.minecraft.network.chat.Component.literal("§bДуша вернулась к владельцу."), true);
+        player.displayClientMessage(net.minecraft.network.chat.Component.literal(
+                "§bДуша вернулась к владельцу."), true);
     }
 }
