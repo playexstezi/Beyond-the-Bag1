@@ -24,13 +24,10 @@ public final class BattleSpoonItem extends SwordItem {
         super(tier, damage, speed, properties);
     }
 
-    /** Right-click performs a short-range sweep that staggers nearby hostile mobs. */
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        if (player.getCooldowns().isOnCooldown(this)) {
-            return InteractionResultHolder.fail(stack);
-        }
+        if (player.getCooldowns().isOnCooldown(this)) return InteractionResultHolder.fail(stack);
         if (!level.isClientSide) {
             int hitCount = 0;
             for (Monster monster : level.getEntitiesOfClass(Monster.class,
@@ -50,34 +47,29 @@ public final class BattleSpoonItem extends SwordItem {
                     SoundSource.PLAYERS, 0.9F, 0.85F);
             if (hitCount > 0) {
                 player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED,
-                        50, 0, false, false, true));
+                        40, 0, false, false, true));
             }
         }
         player.swing(hand);
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
     }
 
-    /** Every normal hit briefly speeds up the wielder and can weaken the target. */
+    @Override
+    public void appendHoverText(ItemStack stack, Level level, List<Component> tooltip, TooltipFlag flag) {
+        super.appendHoverText(stack, level, tooltip, flag);
+        tooltip.add(Component.translatable("tooltip.beyondthebag.battle_spoon"));
+    }
+
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         boolean hit = super.hurtEnemy(stack, target, attacker);
         if (hit && !attacker.level().isClientSide) {
-            attacker.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED,
-                    50, 0, false, false, true));
+            attacker.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 50, 0, false, false, true));
             if (attacker.getRandom().nextFloat() < 0.35F) {
-                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,
-                        90, 0, false, true, true));
-                target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,
-                        70, 0, false, true, true));
+                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 90, 0, false, true, true));
+                target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 70, 0, false, true, true));
             }
         }
         return hit;
-    }
-
-    @Override
-    public void appendHoverText(ItemStack stack, Level level, List<Component> tooltip, TooltipFlag flag) {
-        super.appendHoverText(stack, level, tooltip, flag);
-        tooltip.add(Component.literal("§6ПКМ: круговой удар по врагам в радиусе 3 блоков."));
-        tooltip.add(Component.literal("§7Перезарядка 10 сек. Обычные удары могут ослабить цель."));
     }
 }

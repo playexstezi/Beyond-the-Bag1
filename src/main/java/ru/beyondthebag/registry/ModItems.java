@@ -2,7 +2,6 @@ package ru.beyondthebag.registry;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.ArmorMaterials;
 import ru.beyondthebag.item.MimicWingsArmorItem;
 import net.minecraft.world.item.Tiers;
 import ru.beyondthebag.item.BattleSpoonItem;
