@@ -27,7 +27,7 @@ public final class RiddleExpeditionEvents {
         if (!(event.getEntity() instanceof ServerPlayer player)
                 || !(event.getLevel() instanceof ServerLevel level)
                 || !level.dimension().equals(DimensionBagItem.UNSTABLE_WORLD)
-                || !level.getBlockState(event.getPos()).is(Blocks.STONE_PRESSURE_PLATE)) return;
+                ) return;
         PocketData.Expedition expedition = PocketData.get(player.server.overworld())
                 .getExpedition(player.getUUID()).orElse(null);
         if (expedition == null || expedition.type() != ExpeditionType.RIDDLE) return;

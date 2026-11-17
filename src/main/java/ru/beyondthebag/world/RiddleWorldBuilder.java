@@ -15,7 +15,7 @@ public final class RiddleWorldBuilder {
    for(int i=0;i<3;i++){
     int cx=ox+i*S,a=answer(e.seed(),i);
     set(l,new BlockPos(cx,Y+2,oz-4),COLORS[a]); set(l,new BlockPos(cx,Y+3,oz-4),COLORS[a]);
-    for(int o=0;o<3;o++){BlockPos p=padPosition(ox,oz,i,o);set(l,p.below(),COLORS[o]);set(l,p,Blocks.STONE_PRESSURE_PLATE.defaultBlockState());}
+    for(int o=0;o<3;o++){BlockPos p=padPosition(ox,oz,i,o);set(l,p.below(),COLORS[o]);set(l,p,COLORS[o]);}
    }
    set(l,gatePosition(ox,oz).below(),Blocks.PURPUR_BLOCK.defaultBlockState()); d.markMazeGenerated(e.runId());
   } return new BlockPos(ox,Y+1,oz);
