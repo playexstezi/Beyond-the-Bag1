@@ -10,7 +10,9 @@ import net.minecraft.world.BossEvent;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -26,10 +28,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 
-/**
- * Guardian of the final chamber. Expedition bosses have a boss bar, two combat
- * phases, a charged shockwave and a one-time call for reinforcements.
- */
+/** Expedition guardian with a reinforced boss profile and two combat phases. */
 public final class GuardianEntity extends Monster {
     private static final String BOSS_TAG = "BeyondTheBagExpeditionBoss";
     private static final int SHOCKWAVE_INTERVAL = 200;
@@ -46,23 +45,29 @@ public final class GuardianEntity extends Monster {
         this.xpReward = 80;
     }
 
+    @Override
+    public EntityDimensions getDimensions(Pose pose) {
+        EntityDimensions base = super.getDimensions(pose);
+        return expeditionBoss ? EntityDimensions.scalable(base.width * 1.5F, base.height * 1.5F) : base;
+    }
+
     public void setExpeditionBoss(boolean boss) {
         expeditionBoss = boss;
         if (boss) {
             setCustomName(Component.literal("Хранитель измерения"));
             setCustomNameVisible(true);
-            getAttribute(Attributes.MAX_HEALTH).setBaseValue(360.0D);
-            setHealth(360.0F);
-            getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(26.0D);
+            // Exactly double the normal guardian's base health and melee damage.
+            getAttribute(Attributes.MAX_HEALTH).setBaseValue(144.0D);
+            getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(18.0D);
             getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.22D);
             getAttribute(Attributes.ARMOR).setBaseValue(12.0D);
+            if (getHealth() < 1.0F || getHealth() > 144.0F) setHealth(144.0F);
             bossEvent.setName(getDisplayName());
+            refreshDimensions();
         }
     }
 
-    public boolean isExpeditionBoss() {
-        return expeditionBoss;
-    }
+    public boolean isExpeditionBoss() { return expeditionBoss; }
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
@@ -99,7 +104,7 @@ public final class GuardianEntity extends Monster {
         if (!enraged && getHealth() <= getMaxHealth() * 0.5F) {
             enraged = true;
             getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.30D);
-            getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(32.0D);
+            getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(24.0D);
             addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 20 * 60, 0));
             server.sendParticles(ParticleTypes.SOUL, getX(), getY() + 1.0D, getZ(),
                     45, 1.8D, 1.0D, 1.8D, 0.08D);
@@ -139,7 +144,7 @@ public final class GuardianEntity extends Monster {
         AABB impact = getBoundingBox().inflate(enraged ? 7.0D : 5.0D, 2.0D, enraged ? 7.0D : 5.0D);
         for (ServerPlayer player : nearby) {
             if (!impact.intersects(player.getBoundingBox())) continue;
-            player.hurt(server.damageSources().mobAttack(this), enraged ? 10.0F : 7.0F);
+            player.hurt(server.damageSources().mobAttack(this), enraged ? 12.0F : 8.0F);
             double dx = player.getX() - getX();
             double dz = player.getZ() - getZ();
             player.knockback(enraged ? 1.7D : 1.2D, dx, dz);
@@ -172,7 +177,7 @@ public final class GuardianEntity extends Monster {
         abilityCooldown = Math.max(1, tag.getInt("BeyondTheBagAbilityCooldown"));
         if (enraged) {
             getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.30D);
-            getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(16.0D);
+            getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(24.0D);
         }
     }
 
