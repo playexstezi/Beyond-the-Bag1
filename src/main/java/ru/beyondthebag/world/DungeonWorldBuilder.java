@@ -39,6 +39,7 @@ public final class DungeonWorldBuilder {
                 GuardianEntity boss = ModEntities.GUARDIAN.get().create(level);
                 if (boss != null) {
                     boss.setExpeditionBoss(true);
+                    boss.setExpeditionRunId(expedition.runId());
                     boss.setCustomName(net.minecraft.network.chat.Component.literal("Страж забытого данжа"));
                     boss.moveTo(ox + STEP * 3 + 0.5D, Y + 1, oz + 0.5D, 180.0F, 0.0F);
                     boss.setPersistenceRequired();
