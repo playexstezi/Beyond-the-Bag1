@@ -46,14 +46,14 @@ public final class RiddleExpeditionEvents {
             tag.putLong(RUN,expedition.runId());
             tag.putInt(PROGRESS,0);
             player.displayClientMessage(Component.literal("§cНеверный символ. Последовательность сброшена."),true);
-            player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS,SoundSource.PLAYERS,0.8F,0.6F);
+            player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.get(),SoundSource.PLAYERS,0.8F,0.6F);
             return;
         }
         stage++;
         tag.putLong(RUN,expedition.runId());
         tag.putInt(PROGRESS,stage);
         player.displayClientMessage(Component.literal("§dЗагадка решена: "+stage+"/3"),true);
-        player.playNotifySound(SoundEvents.NOTE_BLOCK_CHIME,SoundSource.PLAYERS,0.9F,1.2F);
+        player.playNotifySound(SoundEvents.NOTE_BLOCK_CHIME.get(),SoundSource.PLAYERS,0.9F,1.2F);
         if (stage == 3) {
             BlockPos gate=RiddleWorldBuilder.gatePosition(ox,oz);
             level.setBlock(gate,Blocks.RESPAWN_ANCHOR.defaultBlockState(),3);
