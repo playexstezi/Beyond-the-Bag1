@@ -36,6 +36,7 @@ public final class GuardianEntity extends Monster {
             Component.literal("Хранитель измерения"),
             BossEvent.BossBarColor.PURPLE, BossEvent.BossBarOverlay.NOTCHED_10);
     private boolean expeditionBoss;
+    private long expeditionRunId;
     private boolean enraged;
     private boolean calledReinforcements;
     private int abilityCooldown = 100;
@@ -68,6 +69,9 @@ public final class GuardianEntity extends Monster {
     }
 
     public boolean isExpeditionBoss() { return expeditionBoss; }
+
+    public void setExpeditionRunId(long runId) { expeditionRunId = runId; }
+    public long getExpeditionRunId() { return expeditionRunId; }
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
@@ -161,6 +165,7 @@ public final class GuardianEntity extends Monster {
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.putBoolean(BOSS_TAG, expeditionBoss);
+        tag.putLong("BeyondTheBagExpeditionRunId", expeditionRunId);
         tag.putBoolean("BeyondTheBagEnraged", enraged);
         tag.putBoolean("BeyondTheBagReinforcements", calledReinforcements);
         tag.putInt("BeyondTheBagAbilityCooldown", abilityCooldown);
@@ -171,6 +176,7 @@ public final class GuardianEntity extends Monster {
         super.readAdditionalSaveData(tag);
         float savedHealth = getHealth();
         setExpeditionBoss(tag.getBoolean(BOSS_TAG));
+        expeditionRunId = tag.getLong("BeyondTheBagExpeditionRunId");
         if (expeditionBoss) setHealth(Math.min(savedHealth, getMaxHealth()));
         enraged = tag.getBoolean("BeyondTheBagEnraged");
         calledReinforcements = tag.getBoolean("BeyondTheBagReinforcements");
