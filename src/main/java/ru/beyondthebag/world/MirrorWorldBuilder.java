@@ -92,7 +92,7 @@ public final class MirrorWorldBuilder {
             set(level, new BlockPos(centerX - 4, Y + 1, centerZ - 2), Blocks.CRAFTING_TABLE.defaultBlockState());
             set(level, new BlockPos(centerX + 4, Y + 1, centerZ - 2), Blocks.BARREL.defaultBlockState());
             set(level, new BlockPos(centerX, Y + 1, centerZ + 3), Blocks.WHITE_CARPET.defaultBlockState());
-            set(level, new BlockPos(centerX, Y + 1, centerZ - 5), Blocks.MIRROR.defaultBlockState());
+            set(level, new BlockPos(centerX, Y + 1, centerZ - 5), Blocks.TINTED_GLASS.defaultBlockState());
         } else if (index >= 1 && index <= 3) {
             set(level, new BlockPos(centerX, Y + 1, centerZ - 5), Blocks.AMETHYST_BLOCK.defaultBlockState());
             set(level, new BlockPos(centerX - 6, Y + 1, centerZ), Blocks.SOUL_LANTERN.defaultBlockState());
@@ -107,7 +107,7 @@ public final class MirrorWorldBuilder {
         for (int dz = -1; dz <= 1; dz++) for (int dy = 1; dy <= 3; dy++)
             set(level, new BlockPos(x, Y + dy, z + dz), Blocks.AIR.defaultBlockState());
         int direction = west ? -1 : 1;
-        for (int step = 1; step < STEP - 8; step++) for (int dz = -2; dz <= 2; dz++) {
+        for (int step = 1; step < STEP - 16; step++) for (int dz = -2; dz <= 2; dz++) {
             int px = x + direction * step;
             set(level, new BlockPos(px, Y, z + dz), Blocks.POLISHED_BLACKSTONE.defaultBlockState());
             for (int dy = 1; dy <= 5; dy++) {

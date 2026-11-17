@@ -60,7 +60,7 @@ public final class MirrorExpeditionEvents {
         tag.putLong(RUN, expedition.runId());
         tag.putInt(PROGRESS, stage);
         player.displayClientMessage(Component.literal("§bОтражение восстановлено: " + stage + "/3"), true);
-        player.playNotifySound(SoundEvents.AMETHYST_BLOCK_CHIME.get(), SoundSource.PLAYERS, 0.9F, 1.1F);
+        player.playNotifySound(SoundEvents.NOTE_BLOCK_CHIME.get(), SoundSource.PLAYERS, 0.9F, 1.1F);
 
         if (stage == 3) {
             BlockPos gate = MirrorWorldBuilder.gatePosition(originX, originZ);
