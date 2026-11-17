@@ -11,7 +11,7 @@
   "item.beyondthebag.mimic_boots": "Сапоги мимика",
   "item.beyondthebag.mimic_wings": "Крылья мимика",
   "item.beyondthebag.battle_spoon": "Боевая поварская ложка",
-  "tooltip.beyondthebag.battle_spoon": "Удар ускоряет владельца и может ослабить врага. ПКМ: боевой азарт на 5 секунд, перезарядка 22 секунды.",
+  "tooltip.beyondthebag.battle_spoon": "Обычный удар ускоряет владельца и иногда ослабляет цель. ПКМ: круговой удар по врагам в радиусе 3 блоков, перезарядка 10 секунд.",
   "message.beyondthebag.stabilizer_used": "Стабилизатор ослабил искажение общей экспедиции.",
   "message.beyondthebag.stabilizer_empty": "Экспедиция уже находится в стабильном состоянии.",
   "message.beyondthebag.menu_pending": "Мешок пока не может открыть меню.",
