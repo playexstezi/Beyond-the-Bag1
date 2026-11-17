@@ -342,12 +342,27 @@ public final class MimicFormEvents {
             player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 80, 0, true, false));
         }
         if ("WATER".equals(mobType) || id.contains("fish") || id.contains("squid")
-                || id.contains("aquatic")) {
-            player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 80, 0, true, false));
+                || id.contains("aquatic") || id.contains("dolphin") || id.contains("axolotl")) {
+            player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 100, 0, true, false));
+            if (id.contains("dolphin") || id.contains("guardian") || id.contains("axolotl")) {
+                player.addEffect(new MobEffectInstance(MobEffects.DOLPHINS_GRACE, 100, 0, true, false));
+            }
         }
         if (id.contains("phantom") || id.contains("flying") || id.contains("bird")
-                || id.contains("bat")) {
-            player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 80, 0, true, false));
+                || id.contains("bat") || id.contains("bee") || id.contains("elytra")) {
+            player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 100, 0, true, false));
+        }
+        if (id.contains("blaze") || id.contains("magma") || id.contains("fire")
+                || id.contains("dragon")) {
+            player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 100, 0, true, false));
+        }
+        if (id.contains("slime") || id.contains("frog") || id.contains("rabbit")
+                || id.contains("spider") || "ARTHROPOD".equals(mobType)) {
+            player.addEffect(new MobEffectInstance(MobEffects.JUMP, 100, 0, true, false));
+        }
+        if (id.contains("cave") || id.contains("glow") || id.contains("warden")
+                || id.contains("enderman") || id.contains("endermite")) {
+            player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 100, 0, true, false));
         }
     }
 }
