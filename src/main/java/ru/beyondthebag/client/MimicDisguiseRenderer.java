@@ -7,11 +7,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.event.TickEvent;
@@ -114,14 +112,24 @@ public final class MimicDisguiseRenderer {
         disguise.setPose(player.getPose());
         disguise.walkAnimation.update(player.walkAnimation.position(), player.walkAnimation.speed());
 
-        // Equipment is copied, never moved. This keeps armour, elytra, shields
-        // and held items visible on the disguised model without risking stacks.
-        for (EquipmentSlot slot : EquipmentSlot.values()) {
-            ItemStack source = player.getItemBySlot(slot);
-            ItemStack current = disguise.getItemBySlot(slot);
-            if (!ItemStack.matches(source, current)) {
-                disguise.setItemSlot(slot, source.copy());
+        // A disguise is meant to conceal the player, not display their gear.
+        // In particular, never copy armour into the render-only creature:
+        // creature renderers have different armour layers and can distort the
+        // player's custom armour. The real player keeps vanilla armour rendering
+        // whenever no disguise is active. Clear any stale armour from cached
+        // render entities as well.
+        for (net.minecraft.world.entity.EquipmentSlot slot : net.minecraft.world.entity.EquipmentSlot.values()) {
+            if (slot.getType() == net.minecraft.world.entity.EquipmentSlot.Type.HUMANOID_ARMOR) {
+                disguise.setItemSlot(slot, net.minecraft.world.item.ItemStack.EMPTY);
             }
+        }
+
+        // Held items are not armour and may still be part of the disguise.
+        for (net.minecraft.world.entity.EquipmentSlot slot : new net.minecraft.world.entity.EquipmentSlot[] {
+                net.minecraft.world.entity.EquipmentSlot.MAINHAND,
+                net.minecraft.world.entity.EquipmentSlot.OFFHAND
+        }) {
+            disguise.setItemSlot(slot, player.getItemBySlot(slot).copy());
         }
     }
 
