@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "M M",
+    "MPM",
+    "MCM"
+  ],
+  "key": {
+    "M": {
+      "item": "beyondthebag:mimic_fragment"
+    },
+    "P": {
+      "item": "minecraft:phantom_membrane"
+    },
+    "C": {
+      "item": "beyondthebag:distortion_core"
+    }
+  },
+  "result": {
+    "item": "beyondthebag:mimic_wings",
+    "count": 1
+  }
+}

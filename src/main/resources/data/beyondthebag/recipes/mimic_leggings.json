@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "MMM",
+    "M M",
+    "M M"
+  ],
+  "key": {
+    "M": {
+      "item": "beyondthebag:mimic_fragment"
+    }
+  },
+  "result": {
+    "item": "beyondthebag:mimic_leggings",
+    "count": 1
+  }
+}

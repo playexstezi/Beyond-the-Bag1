@@ -21,7 +21,6 @@ public final class BeyondTheBag {
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.COMBAT) {
-            event.accept(ModItems.MIMIC_FRAGMENT);
             event.accept(ModItems.MIMIC_HELMET);
             event.accept(ModItems.MIMIC_CHESTPLATE);
             event.accept(ModItems.MIMIC_LEGGINGS);
@@ -34,6 +33,7 @@ public final class BeyondTheBag {
             event.accept(ModItems.DISTORTION_CORE);
             event.accept(ModItems.GUARDIAN_HEART);
             event.accept(ModItems.EXPEDITION_STABILIZER);
+            event.accept(ModItems.MIMIC_WINGS);
         }
     }
 }
