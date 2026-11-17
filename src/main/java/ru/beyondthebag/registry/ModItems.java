@@ -31,11 +31,11 @@ public final class ModItems {
     public static final RegistryObject<Item> MIMIC_HELMET = ITEMS.register("mimic_helmet",
         () -> new ArmorItem(ru.beyondthebag.item.MimicArmorMaterial.MIMIC, ArmorItem.Type.HELMET, new Item.Properties().fireResistant()));
     public static final RegistryObject<Item> MIMIC_CHESTPLATE = ITEMS.register("mimic_chestplate",
-        () -> new ArmorItem(ArmorMaterials.CHAIN, ArmorItem.Type.CHESTPLATE, new Item.Properties().fireResistant()));
+        () -> new ArmorItem(ru.beyondthebag.item.MimicArmorMaterial.MIMIC, ArmorItem.Type.CHESTPLATE, new Item.Properties().fireResistant()));
     public static final RegistryObject<Item> MIMIC_LEGGINGS = ITEMS.register("mimic_leggings",
-        () -> new ArmorItem(ArmorMaterials.CHAIN, ArmorItem.Type.LEGGINGS, new Item.Properties().fireResistant()));
+        () -> new ArmorItem(ru.beyondthebag.item.MimicArmorMaterial.MIMIC, ArmorItem.Type.LEGGINGS, new Item.Properties().fireResistant()));
     public static final RegistryObject<Item> MIMIC_BOOTS = ITEMS.register("mimic_boots",
-        () -> new ArmorItem(ArmorMaterials.CHAIN, ArmorItem.Type.BOOTS, new Item.Properties().fireResistant()));
+        () -> new ArmorItem(ru.beyondthebag.item.MimicArmorMaterial.MIMIC, ArmorItem.Type.BOOTS, new Item.Properties().fireResistant()));
     public static final RegistryObject<Item> MIMIC_WINGS = ITEMS.register("mimic_wings",
         () -> new MimicWingsArmorItem(ru.beyondthebag.item.MimicArmorMaterial.MIMIC, new Item.Properties().fireResistant()));
     public static final RegistryObject<Item> BATTLE_SPOON = ITEMS.register("battle_spoon",
