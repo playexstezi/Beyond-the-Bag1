@@ -48,7 +48,7 @@ public final class MazeLayout {
     public static MazeLayout generate(long seed, int requestedInstability) {
         int instability = Math.max(0, Math.min(4, requestedInstability));
         Random random = new Random(seed);
-        int target = 54 + random.nextInt(15) + instability * 8;
+        int target = 88 + random.nextInt(17) + instability * 10;
         List<MutableRoom> rooms = new ArrayList<>();
         List<MutableRoom> frontier = new ArrayList<>();
         Set<Long> occupied = new HashSet<>();
@@ -90,7 +90,7 @@ public final class MazeLayout {
 
         // A small number of short optional loops creates shortcuts without producing
         // enormous corridors or unexpectedly expanding the generated footprint.
-        int secretAttempts = 1 + instability;
+        int secretAttempts = 3 + instability * 2;
         for (int i = 0; i < secretAttempts; i++) {
             MutableRoom a = rooms.get(random.nextInt(rooms.size()));
             MutableRoom b = rooms.get(random.nextInt(rooms.size()));
