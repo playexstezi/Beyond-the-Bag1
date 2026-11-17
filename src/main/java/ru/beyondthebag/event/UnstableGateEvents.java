@@ -57,6 +57,10 @@ public final class UnstableGateEvents {
                 center = ru.beyondthebag.world.DungeonWorldBuilder.gatePosition(originX, originZ);
             } else if (expedition.type() == ExpeditionType.DISTORTION) {
                 center = ru.beyondthebag.world.DistortionWorldBuilder.gatePosition(originX, originZ);
+            } else if (expedition.type() == ExpeditionType.MIRROR) {
+                center = ru.beyondthebag.world.MirrorWorldBuilder.gatePosition(originX, originZ);
+            } else if (expedition.type() == ExpeditionType.RIDDLE) {
+                center = ru.beyondthebag.world.RiddleWorldBuilder.gatePosition(originX, originZ);
             } else {
                 MazeLayout layout = MazeLayout.generate(expedition.seed(), expedition.instability());
                 if (layout.rooms().size() < 2) continue;
