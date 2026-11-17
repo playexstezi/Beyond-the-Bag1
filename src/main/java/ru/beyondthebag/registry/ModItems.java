@@ -21,5 +21,7 @@ public final class ModItems {
         () -> new Item(new Item.Properties().fireResistant()));
     public static final RegistryObject<Item> GUARDIAN_HEART = ITEMS.register("guardian_heart",
         () -> new Item(new Item.Properties().stacksTo(1).fireResistant()));
+    public static final RegistryObject<Item> EXPEDITION_STABILIZER = ITEMS.register("expedition_stabilizer",
+        () -> new Item(new Item.Properties().stacksTo(16).fireResistant()));
     public static void register(IEventBus bus) { ITEMS.register(bus); }
 }

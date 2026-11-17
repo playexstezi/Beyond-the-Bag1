@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "MGM",
+    " E ",
+    " D "
+  ],
+  "key": {
+    "M": {
+      "item": "beyondthebag:mirror_fragment"
+    },
+    "G": {
+      "item": "beyondthebag:guardian_heart"
+    },
+    "E": {
+      "item": "minecraft:echo_shard"
+    },
+    "D": {
+      "item": "beyondthebag:distortion_core"
+    }
+  },
+  "result": {
+    "item": "beyondthebag:expedition_stabilizer",
+    "count": 1
+  }
+}

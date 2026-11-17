@@ -25,6 +25,7 @@ public final class BeyondTheBag {
             event.accept(ModItems.MIRROR_FRAGMENT);
             event.accept(ModItems.DISTORTION_CORE);
             event.accept(ModItems.GUARDIAN_HEART);
+            event.accept(ModItems.EXPEDITION_STABILIZER);
         }
     }
 }
